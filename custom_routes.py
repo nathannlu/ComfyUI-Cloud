@@ -24,6 +24,7 @@ from urllib.parse import quote
 import threading
 import hashlib
 import aiohttp
+from user import load_user_profile
 
 api = None
 api_task = None
@@ -78,6 +79,7 @@ def randomSeed(num_digits=15):
     range_end = (10**num_digits) - 1
     return random.randint(range_start, range_end)
 
+
 @server.PromptServer.instance.routes.post("/upload-dependencies")
 async def upload_dependencies(request):
     import modal
@@ -112,6 +114,19 @@ async def upload_dependencies(request):
 
     print("Uploaded fine")
     return web.json_response({'success': True}, content_type='application/json')
+
+
+@server.PromptServer.instance.routes.get("/comfy-cloud/user")
+async def comfy_cloud_run(request):
+    try:
+        data = load_user_profile()
+        return web.json_response({
+            "user": data
+        }, content_type='application/json')
+    except Exception as e:
+        print("Error:", e)
+        return web.json_response({ "error": e }, status=400)
+
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/run")
 async def comfy_cloud_run(request):

@@ -3,7 +3,7 @@ import { api } from "./api.js";
 import { ComfyWidgets, LGraphNode } from "./widgets.js";
 import { generateDependencyGraph } from "https://esm.sh/comfyui-json@0.1.14";
 
-const endpoint = "https://comfycloud.vercel.app/"
+const endpoint = "https://comfycloud.vercel.app"
 
 /** @typedef {import('../../../web/types/comfy.js').ComfyExtension} ComfyExtension*/
 /** @type {ComfyExtension} */
@@ -14,6 +14,8 @@ const ext = {
 
   init(app) {
     addButton();
+
+    addPing();
 
     const queryParams = new URLSearchParams(window.location.search);
     const workflow_version_id = queryParams.get("workflow_version_id");
@@ -270,6 +272,22 @@ function createDynamicUIHtml(data) {
 
   html += "</div>";
   return html;
+}
+
+async function addPing() {
+  const { user } = await fetch(
+    '/comfy-cloud/user',
+  ).then((x) => x.json())
+
+  const userId = user?.id;
+  console.log("got user id", userId, user)
+
+  if(userId) {
+    const menu = document.querySelector(".comfy-menu");
+    const i = document.createElement('img');
+    i.src = `${endpoint}/api/p?e=${userId}`
+    menu.appendChild(i);
+  }
 }
 
 function addButton() {

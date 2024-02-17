@@ -1,6 +1,10 @@
 import os
 import sys
 
+WEB_DIRECTORY = "web-plugin"
+NODE_CLASS_MAPPINGS = {}
+__all__ = ['NODE_CLASS_MAPPINGS']
+
 sys.path.append(os.path.join(os.path.dirname(__file__)))
 
 import inspect
@@ -12,12 +16,7 @@ import folder_paths
 from folder_paths import add_model_folder_path, get_filename_list, get_folder_paths
 from tqdm import tqdm
 import base64
-
 from . import custom_routes
-# import routes
-
-WEB_DIRECTORY = "web-plugin"
-__all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]
 
 
 # Install requirements
@@ -78,6 +77,7 @@ except:
             print(f"## [ERROR] Comfy Cloud: Failed to install the GitPython package in the correct Python environment. Please install it manually in the appropriate environment.")
 
     print(f"## Comfy Cloud: installing dependencies done.")
+
 
 
 # enable error handler
