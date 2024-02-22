@@ -1,9 +1,17 @@
 # ComfyUI Cloud
 Join [Discord](https://discord.gg/2PTNx3VCYa) for support and questions!
 
-Don't have a GPU but want to run ComfyUI locally? Our plugin allows you to do just that! Execute your workflows on a local ComfyUI using our cloud GPUs. You only pay for the generation time.
+Don't have a GPU but want to run ComfyUI on your desktop? Do you enjoy ComfyUI running locally with full control, but just wished you could outsource the GPU power? Our plugin allows you to do just that! Execute your workflows on a local ComfyUI using our cloud GPUs. You only pay for the generation time.
 
-https://github.com/nathannlu/comfyui-cloud/assets/24965772/b73e2b61-bc36-4da7-b4de-75e46843ae71
+**Perks:**
+- No need to spend cash for a new GPU
+- Don't have to bother with importing custom nodes/models into cloud providers
+- Pay $0.003/s of image generation time! (e.g. your workflow takes 30 seconds to generate, your charge will be $0.09)
+
+
+https://github.com/nathannlu/comfyui-cloud/assets/24965772/1c8ea638-edc3-49b8-ab77-9e4987764e70
+
+
 
 # Comfy Cloud Plugin Installation
 
@@ -13,19 +21,11 @@ https://github.com/nathannlu/comfyui-cloud/assets/24965772/b73e2b61-bc36-4da7-b4
 2. `git clone https://github.com/nathannlu/comfyui-cloud.git`
 3. Run your workflow!
 
-> You must have ComfyUI Manager installed for this plugin to work
-
 # How to use 
 After you first install the plugin...
-1. you must click on "Upload" button near the bottom of your panel. This will prompt you to log in to your account.
-2. You will then need to upload your workflow.
-Once those two steps have been completed, you will be able to generate your workflow on the cloud!
-
-<b>Every time you make an edit to your workflow, you must repeat step 2. Click on the upload button and re-upload your workflow.</b>
-
-See video below for reference.
-
-https://github.com/nathannlu/comfyui-cloud/assets/24965772/91cd47aa-1e46-4543-992b-e5b308bd90c8
+1. The first time you click 'generate', you will be prompted to log into your account.
+2. Subsequent generations after the first is faster (the first run it takes a while to process your workflow).
+Once those two steps have been completed, you will be able to seamlessly generate your workflow on the cloud!
 
 # Special Thanks
 
