@@ -24,7 +24,9 @@ from urllib.parse import quote
 import threading
 import hashlib
 import aiohttp
+import importlib
 from user import load_user_profile
+#from nodes import NODE_CLASS_MAPPINGS
 
 api = None
 api_task = None
@@ -366,6 +368,71 @@ async def comfy_cloud_check_status(request):
             "message": "prompt_id not found"
         })
 
+@server.PromptServer.instance.routes.get("/comfy-cloud/custom-nodes-list")
+async def get_custom_nodes_list(request):
+    #base_node_names = set(NODE_CLASS_MAPPINGS.keys())
+
+    custom_nodes = {}
+    node_paths = folder_paths.get_folder_paths("custom_nodes")
+    #node_import_times = []
+    for custom_node_path in node_paths:
+        possible_modules = os.listdir(os.path.realpath(custom_node_path))
+        if "__pycache__" in possible_modules:
+            possible_modules.remove("__pycache__")
+
+        for possible_module in possible_modules:
+            module_path = os.path.join(custom_node_path, possible_module)
+            if os.path.isfile(module_path) and os.path.splitext(module_path)[1] != ".py": continue
+            if module_path.endswith(".disabled"): continue
+            #time_before = time.perf_counter()
+            mappings = load_custom_node(module_path) #, base_node_names)
+            custom_nodes[mappings[0]] = mappings[1]
+
+    return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
+
+
+def load_custom_node(module_path, ignore=set()):
+    mappings = []
+
+    module_name = os.path.basename(module_path)
+    if os.path.isfile(module_path):
+        sp = os.path.splitext(module_path)
+        module_name = sp[0]
+    try:
+        if os.path.isfile(module_path):
+            module_spec = importlib.util.spec_from_file_location(module_name, module_path)
+            module_dir = os.path.split(module_path)[0]
+        else:
+            module_spec = importlib.util.spec_from_file_location(module_name, os.path.join(module_path, "__init__.py"))
+            module_dir = module_path
+
+        module = importlib.util.module_from_spec(module_spec)
+        sys.modules[module_name] = module
+        module_spec.loader.exec_module(module)
+
+        if hasattr(module, "NODE_CLASS_MAPPINGS") and getattr(module, "NODE_CLASS_MAPPINGS") is not None:
+            for name in module.NODE_CLASS_MAPPINGS:
+                if name not in ignore:
+                    #mappings[name] = module.NODE_CLASS_MAPPINGS[name]
+                    mappings.append(name)
+                    #NODE_CLASS_MAPPINGS[name] = module.NODE_CLASS_MAPPINGS[name]
+            """
+            if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS") and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None:
+                print(module.NODE_DISPLAY_NAME_MAPPINGS)
+                #NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
+            """
+
+            return (module_name, mappings)
+        else:
+            print(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
+            return False
+    except Exception as e:
+        print(traceback.format_exc())
+        print(f"Cannot import {module_path} module for custom nodes:", e)
+        return None
+
+
+
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
 async def upload_dependencies(request):
 
@@ -374,7 +441,9 @@ async def upload_dependencies(request):
         json_data = await request.json()
         endpoint = json_data["endpoint"]
         workflow_id = json_data["workflow_id"]
+
         models_dep = json_data["modelsToUpload"]
+        nodes_dep = json_data["nodesToUpload"]
         files = json_data["filesToUpload"]
 
         body = {
@@ -391,10 +460,10 @@ async def upload_dependencies(request):
                 base64.b64decode(json_response["data"]),{
                     "workflow_id": workflow_id,
                     "models_dep": models_dep,
+                    "nodes_dep": nodes_dep,
                     "files": files,
                 }
             )
-
         return web.json_response({'success': True}, content_type='application/json')
     except Exception as e:
         print("Error", e)
