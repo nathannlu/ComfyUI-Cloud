@@ -1084,7 +1084,10 @@ export async function onGeneration() {
       setMessage("Changes detected, syncing...");
       await uploadLocalWorkflow()
       const { nodesToUpload } = await syncDependencies(diffDeps)
-      await buildVenvPartial(nodesToUpload)
+
+      if(nodesToUpload) {
+        await buildVenvPartial(nodesToUpload)
+      }
       // build venv
     }
 
