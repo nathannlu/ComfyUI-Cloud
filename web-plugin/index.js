@@ -671,85 +671,102 @@ export class ConfigDialog extends ComfyDialog {
  * Returns the workflow stored in cloud DB
  */
 export const getCloudWorkflow = async () => {
-  const { endpoint, apiKey } = getData();
-  const workflow_id = getWorkflowId();
-  console.log('got id',workflow_id)
-  const body = {
-    version: parseInt(getVersion()),
-  }
-  const existing_workflow = await fetch(endpoint + "/api/workflow/" + workflow_id,{
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + apiKey,
-    },
-  }).then(x=>x.json())
+  try {
+    const { endpoint, apiKey } = getData();
+    const workflow_id = getWorkflowId();
+    console.log('got id',workflow_id)
+    const body = {
+      version: parseInt(getVersion()),
+    }
+    const existing_workflow = await fetch(endpoint + "/api/workflow/" + workflow_id,{
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    }).then(x=>x.json())
 
-  return existing_workflow;
+    return existing_workflow;
+  } catch(e) {
+    throw new Error("Failed to retrieve workflow from cloud")
+  }
 }
 
 /**
  * Sends data to createRun api endpoint
  */
 export const createRun = async () => {
-  const { endpoint, apiKey } = getData();
-  const user = await getUser();
+  try {
+    const { endpoint, apiKey } = getData();
+    const user = await getUser();
 
-  const apiRoute = endpoint + "/api/run";
-  const body = {
-    workflow_id: getWorkflowId(),
-    version: getVersion(),
-    user_id: user?.id,
-    inputs: {},
+    const apiRoute = endpoint + "/api/run";
+    const body = {
+      workflow_id: getWorkflowId(),
+      version: getVersion(),
+      user_id: user?.id,
+      inputs: {},
+    }
+    let data = await fetch(apiRoute, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    })
+  } catch(e) {
+    throw new Error("Failed to create run request in the backend")
   }
-  let data = await fetch(apiRoute, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + apiKey,
-    },
-  })
 }
 
 /**
  * Sends local workflow to the cloud to be stored
  */
 export const uploadLocalWorkflow = async () => {
-  const { endpoint, apiKey } = getData();
-  const apiRoute = endpoint + "/api/workflow";
-  const prompt = await app.graphToPrompt();
+  try {
+    const { endpoint, apiKey } = getData();
+    const apiRoute = endpoint + "/api/workflow";
+    const prompt = await app.graphToPrompt();
 
-  const body = {
-    workflow_name: getWorkflowName(),
-    workflow_id: getWorkflowId(),
-    workflow: prompt.workflow,
-    workflow_api: prompt.output,
-    snapshot: {
-      comfyui: "",
-      git_custom_nodes: {},
-      file_custom_nodes: [],
-    },
-  };
-  //let data = { status: 200 }
-  let data = await fetch(apiRoute, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + apiKey,
-    },
-  });
+    const body = {
+      workflow_name: getWorkflowName(),
+      workflow_id: getWorkflowId(),
+      workflow: prompt.workflow,
+      workflow_api: prompt.output,
+      snapshot: {
+        comfyui: "",
+        git_custom_nodes: {},
+        file_custom_nodes: [],
+      },
+    };
+    //let data = { status: 200 }
+    let data = await fetch(apiRoute, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    });
 
-  if (data.status !== 200) {
-    throw new Error(await data.text());
-  } else {
-    data = await data.json();
+    if (data.status !== 200) {
+      throw new Error(await data.text());
+    } else {
+      data = await data.json();
+    }
+    
+    setWorkflowId(data.workflow_id)
+    setVersion(data.version)
+  } catch (e) {
+    // @todo
+    // Handle potential reasons:
+    // - user has no network connection
+    // - user auth token expired
+    // - server not responsive
+    throw new Error("Failed to upload workflow API to cloud")
   }
-  
-  setWorkflowId(data.workflow_id)
-  setVersion(data.version)
 }
 
 /**
@@ -846,60 +863,149 @@ const compareWorkflows = (local, cloud) => {
   //console.log(local, cloud, diff)
   return diff
 }
-const syncDependencies = async (diff) => {
-  // update with new workflow
-  const workflow_id = getWorkflowId()
-  const { endpoint } = getData();
 
-  if(!diff) {
-    return 
+const getCustomNodesList = async () => {
+  const custom_nodes_list = await fetch("/comfy-cloud/custom-nodes-list", {
+    method: "get",
+  }).then((x) => x.json())
+
+  return custom_nodes_list.custom_nodes
+}
+
+const isCustomNode = (class_type) => {
+  const defaultCustomNodes = ["KSampler","KSamplerAdvanced","CheckpointLoader","CheckpointLoaderSimple","VAELoader","LoraLoader","CLIPLoader","ControlNetLoader","DiffControlNetLoader","StyleModelLoader","CLIPVisionLoader","UpscaleModelLoader","CLIPVisionEncode","StyleModelApply","CLIPTextEncode","CLIPSetLastLayer","ConditioningCombine","ConditioningAverage ","ConditioningConcat","ConditioningSetArea","ConditioningSetAreaPercentage","ConditioningSetMask","ControlNetApply","ControlNetApplyAdvanced","VAEEncodeForInpaint","SetLatentNoiseMask","VAEDecode","VAEEncode","LatentRotate","LatentFlip","LatentCrop","EmptyLatentImage","LatentUpscale","LatentUpscaleBy","LatentComposite","LatentBlend","LatentFromBatch","RepeatLatentBatch","SaveImage","PreviewImage","LoadImage","LoadImageMask","ImageScale","ImageScaleBy","ImageUpscaleWithModel","ImageInvert","ImagePadForOutpaint","ImageBatch","VAEDecodeTiled","VAEEncodeTiled"]
+
+  if (defaultCustomNodes.indexOf(class_type) !== -1) {
+    return true
+  } else {
+    return false;
   }
+}
 
-  // Find items that end with tf paths
-  // comfyui supported model extensions = set(['.ckpt', '.pt', '.bin', '.pth', '.safetensors'])
-  //
-  // Note:
-  // - this will cause an error if in the prompt user types
-  //   in .safetensors
-  let modelsToUpload = []
-  let filesToUpload = []
-  for (const v of Object.values(diff)) {
-    // Upload necessary images
-    if (v?.class_type == 'LoadImage') {
-      filesToUpload.push(v.inputs.image)
+const syncDependencies = async (diff) => {
+  try {
+    // update with new workflow
+    const workflow_id = getWorkflowId()
+    const { endpoint } = getData();
+
+    if(!diff) {
+      return 
     }
 
-    // Upload necessary images
-    if (v?.inputs) {
-      for (const z of Object.values(v?.inputs)) {
-        if (typeof z == "string") {
-          if (
-            z.endsWith('.safetensors') ||
-            z.endsWith('.pth') ||
-            z.endsWith('.pt') ||
-            z.endsWith('.bin') ||
-            z.endsWith('.ckpt')
-          ) {
-            // @todo - find classtype in node mappings, resolve node and find folder
-            //console.log("Upload", z, nodeMappings[v.class_type])
-            modelsToUpload.push(z);
+    // Find items that end with tf paths
+    // comfyui supported model extensions = set(['.ckpt', '.pt', '.bin', '.pth', '.safetensors'])
+    //
+    // Note:
+    // - this will cause an error if in the prompt user types
+    //   in .safetensors
+    let modelsToUpload = []
+    let dependenciesToUpload = []
+    let filesToUpload = []
+    for (const v of Object.values(diff)) {
+      // Upload necessary images
+      if (v?.class_type == 'LoadImage') {
+        filesToUpload.push(v.inputs.image)
+      }
+
+      // Upload necessary images
+      if (v?.inputs) {
+        for (const z of Object.values(v?.inputs)) {
+          if (typeof z == "string") {
+            if (
+              z.endsWith('.safetensors') ||
+              z.endsWith('.pth') ||
+              z.endsWith('.pt') ||
+              z.endsWith('.bin') ||
+              z.endsWith('.ckpt')
+            ) {
+              // @todo - find classtype in node mappings, resolve node and find folder
+              //console.log("Upload", z, nodeMappings[v.class_type])
+              modelsToUpload.push(z);
+            }
+          }
+        }
+      }
+
+      // Only upload dependencies that change
+      if(!isCustomNode(v?.class_type)) {
+        // search for class_type in custom_nodes_list
+        const customNodesList = await getCustomNodesList()
+        console.log(customNodesList)
+        for (let name in customNodesList) {
+          if(customNodesList[name].indexOf(v?.class_type) !== -1) {
+            // found in current custom_node
+            dependenciesToUpload.push(name)
           }
         }
       }
     }
-  }
 
-  if(filesToUpload.length > 0 || modelsToUpload.length > 0) {
+    if(filesToUpload.length > 0 || modelsToUpload.length > 0 || dependenciesToUpload.length > 0) {
+      const body = {
+        workflow_id,
+        modelsToUpload,
+        filesToUpload,
+        nodesToUpload: dependenciesToUpload,
+        endpoint
+      }
+      await fetch("/comfy-cloud/upload", {
+        method: "POST",
+        body: JSON.stringify(body),
+      })
+
+      return {
+        modelsToUpload,
+        filesToUpload,
+        nodesToUpload: dependenciesToUpload,
+      }
+    }
+  } catch (e) {
+    // Potential reason for failure here can be modal
+    // servers are unresponsive
+    throw new Error("Failed to upload dependencies to cloud")
+  }
+}
+
+const buildVenv = async () => {
+  try {
+    const workflow_id = getWorkflowId()
+    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create"
     const body = {
       workflow_id,
-      modelsToUpload,
-      filesToUpload,
-      endpoint
     }
-    await fetch("/comfy-cloud/upload", {
+    return await fetch(url, {
       method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify(body),
     })
+  } catch(e) {
+    // Potential reason for failure here can be modal
+    // servers are unresponsive
+    throw new Error("Failed to build env in cloud")
+  }
+}
+
+const buildVenvPartial = async (custom_nodes) => {
+  try {
+    const workflow_id = getWorkflowId()
+    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create-partial"
+    const body = {
+      workflow_id,
+      custom_nodes
+    }
+    return await fetch(url, {
+      method: "POST",
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    })
+  } catch(e) {
+    // Potential reason for failure here can be modal
+    // servers are unresponsive
+    throw new Error("Failed to update env in cloud")
   }
 }
 
@@ -962,6 +1068,7 @@ export async function onGeneration() {
 
       await uploadLocalWorkflow()
       await syncDependencies(localWorkflow.output)
+      await buildVenv()
     }
 
     // compare workflow
@@ -970,11 +1077,15 @@ export async function onGeneration() {
     const diffDeps = compareWorkflows(localWorkflow.output, existing_workflow.workflow_api);
     const isWorkflowUpToDate = _.isEmpty(diffDeps);
 
+
+
     // sync workflow
     if(!isWorkflowUpToDate) {
       setMessage("Changes detected, syncing...");
       await uploadLocalWorkflow()
-      await syncDependencies(diffDeps)
+      const { nodesToUpload } = await syncDependencies(diffDeps)
+      await buildVenvPartial(nodesToUpload)
+      // build venv
     }
 
     // Beyond this point, we assume all dependencies
