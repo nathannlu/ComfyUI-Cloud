@@ -889,7 +889,7 @@ const syncDependencies = async (diff) => {
     const { endpoint } = getData();
 
     if(!diff) {
-      return 
+      return {}
     }
 
     // Find items that end with tf paths
