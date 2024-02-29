@@ -35,7 +35,7 @@ After you first install the plugin...
 Once those two steps have been completed, you will be able to seamlessly generate your workflow on the cloud!
 
 ## Special Thanks
-
-- comfyui
-- modal
-- bennykok
+<a href="https://github.com/NVIDIA"><img src="https://avatars.githubusercontent.com/u/1728152?v=4" width="50" height="50" alt=""/></a>
+<a href="https://github.com/modal-labs"><img src="https://avatars.githubusercontent.com/u/88658467?v=4" width="50" height="50" alt=""/></a>
+<a href="https://github.com/comfyanonymous/ComfyUI"><img src="https://avatars.githubusercontent.com/u/121283862?v=4" width="50" height="50" alt=""/></a>
+<a href="https://github.com/BennyKok"><img src="https://avatars.githubusercontent.com/u/18395202?v=4" width="50" height="50" alt=""/></a>
