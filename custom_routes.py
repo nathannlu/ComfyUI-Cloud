@@ -1,6 +1,7 @@
 from aiohttp import web
 import os
 import requests
+from requests.adapters import HTTPAdapter, Retry
 import folder_paths
 import json
 import numpy as np
@@ -449,8 +450,27 @@ async def upload_dependencies(request):
         body = {
             "token": ""
         }
+        def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_delay=1):
+            for attempt in range(1, max_retries + 1):
+                try:
+                    response = requests.post(url, data=data, headers=headers)
+
+                    # Check if the response status code is OK (2xx)
+                    response.raise_for_status()
+
+                    return response
+                except requests.exceptions.RequestException as e:
+                    print(f"Attempt {attempt} failed: {e}")
+                    if attempt < max_retries:
+                        print(f"Retrying in {retry_delay} seconds...")
+                        time.sleep(retry_delay)
+                    else:
+                        print(f"Maximum retries reached. Failed to make POST request.")
+                        raise
+
         url = f"{endpoint}/api/e"
-        response = requests.post(url, data=body)
+        response = make_post_request_with_retry(url, data=body)
+
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
@@ -464,7 +484,10 @@ async def upload_dependencies(request):
                     "files": files,
                 }
             )
-        return web.json_response({'success': True}, content_type='application/json')
+            return web.json_response({'success': True}, content_type='application/json')
+        else:
+            return web.json_response({'success': False}, status=500, content_type='application/json')
+
     except Exception as e:
         print("Error", e)
         return web.json_response({'success': False}, status=500, content_type='application/json')
