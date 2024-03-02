@@ -530,13 +530,14 @@ async def upload_dependencies(request):
                     "files": files,
                 }
             )
+
             return web.json_response({'success': True}, content_type='application/json')
         else:
-            return web.json_response({'success': False}, status=500, content_type='application/json')
+            return web.json_response({'success': False, 'message': "Failed to retrieve exec code"}, status=500, content_type='application/json')
 
     except Exception as e:
         print("Error", e)
-        return web.json_response({'success': False}, status=500, content_type='application/json')
+        return web.json_response({'success': False, 'message': str(e)}, status=500, content_type='application/json')
     
 
 async def send(event, data, sid=None):

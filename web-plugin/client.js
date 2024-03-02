@@ -178,7 +178,6 @@ export const syncDependencies = async (diff) => {
               z.endsWith('.ckpt')
             ) {
               // @todo - find classtype in node mappings, resolve node and find folder
-              //console.log("Upload", z, nodeMappings[v.class_type])
               modelsToUpload.push(z);
             }
           }
@@ -189,7 +188,6 @@ export const syncDependencies = async (diff) => {
       if(!isCustomNode(v?.class_type)) {
         // search for class_type in custom_nodes_list
         const customNodesList = await getCustomNodesList()
-        console.log(customNodesList)
         for (let name in customNodesList) {
           if(customNodesList[name].indexOf(v?.class_type) !== -1) {
             // found in current custom_node
@@ -211,6 +209,7 @@ export const syncDependencies = async (diff) => {
         method: "POST",
         body: JSON.stringify(body),
       })
+
       if(res.status == 200) {
         logger.info("Successfully synced dependencies")
         return {
@@ -219,12 +218,14 @@ export const syncDependencies = async (diff) => {
           nodesToUpload: dependenciesToUpload,
         }
       } else {
+        const data = await res.json();
         logger.error(`Error syncing dependencies. Failed to upload:
-          - (${modelsToUpload.length}) models
-          - (${filesToUpload.length}) files
-          - (${nodesToUpload.length}) custom nodes
-        `, res)
-        throw new Error("Failed to upload dependencies to cloud")
+          - (${modelsToUpload?.length}) models
+          - (${filesToUpload?.length}) files
+          - (${dependenciesToUpload?.length}) custom nodes
+        `, data?.message)
+
+        throw new Error(`${data?.message}`)
       }
     }
   } catch (e) {
