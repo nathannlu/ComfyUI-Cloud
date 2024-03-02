@@ -535,6 +535,24 @@ function saveData(data) {
   );
 }
 
+const createMetaNode = async () => {
+  const text = await inputDialog.input(
+    "Create your deployment",
+    "Workflow name",
+  );
+  if (!text) throw new Error("Node not created");
+  app.graph.beforeChange();
+
+  var node = LiteGraph.createNode("ComfyCloud");
+  node.configure({
+    widgets_values: [text],
+  });
+  node.pos = [0, 0];
+
+  app.graph.add(node);
+  app.graph.afterChange();
+}
+
 export class ConfigDialog extends ComfyDialog {
   container = null;
   poll = null;
@@ -667,7 +685,7 @@ export class ConfigDialog extends ComfyDialog {
   }
 }
 
-import { getApiToken, validatePrompt, createMetaNode, getWorkflowId, compareWorkflows, isWorkflowUpToDate } from "./utils.js"
+import { getApiToken, validatePrompt, getWorkflowId, compareWorkflows, isWorkflowUpToDate } from "./utils.js"
 import { uploadLocalWorkflow, syncDependencies, buildVenv, buildVenvPartial, getCloudWorkflow, createRun } from "./client.js"
 import { logger } from './logger.js';
 export async function onGeneration() {
@@ -704,7 +722,10 @@ export async function onGeneration() {
       await createMetaNode();
 
       await uploadLocalWorkflow()
+
+      setMessage("Syncing dependencies...");
       await syncDependencies(localWorkflow.output)
+      setMessage("Building environment...");
       await buildVenv()
     }
 
@@ -717,9 +738,12 @@ export async function onGeneration() {
     if(!isWorkflowUpToDate(diffDeps)) {
       setMessage("Changes detected, syncing...");
       await uploadLocalWorkflow()
+
+      setMessage("Syncing dependencies...");
       const { nodesToUpload } = await syncDependencies(diffDeps)
 
       if(nodesToUpload) {
+        setMessage("Building environment...");
         await buildVenvPartial(nodesToUpload)
       }
     }
