@@ -9,19 +9,20 @@ import {
   getCustomNodesList, 
   isCustomNode,
 } from './utils.js'
-
+import { logger } from "./logger.js";
 import retry from "https://esm.sh/gh/vercel/async-retry";
 
 const fetchRetry = async (url, options = {}, retries) => {
-  await retry(
+  return await retry(
     async bail => {
+      logger.info("fetchRetry: sending request...")
       const res = await fetch(url, options);
       if (res.status !== 200) {
         bail(new Error("Server error"));
         return;
       }
 
-      return res.json()
+      return await res.json()
     },
     {
       retries
@@ -33,10 +34,11 @@ const fetchRetry = async (url, options = {}, retries) => {
  * Returns the workflow stored in cloud DB
  */
 export const getCloudWorkflow = async () => {
+  logger.info("Retrieving existing workflow from cloud")
   try {
     const { endpoint, apiKey } = getData();
     const workflow_id = getWorkflowId();
-    console.log('got id',workflow_id)
+
     const body = {
       version: parseInt(getVersion()),
     }
@@ -49,9 +51,14 @@ export const getCloudWorkflow = async () => {
       },
     }, 2)
 
+    console.log(existing_workflow)
+
+    logger.info("Successfully retrieved workflow")
+
     return existing_workflow;
   } catch(e) {
-    console.log(e)
+    logger.error("Failed to retrieve workflow from cloud", e)
+
     throw new Error("Failed to retrieve workflow from cloud. Please try again")
   }
 }
@@ -60,6 +67,7 @@ export const getCloudWorkflow = async () => {
  * Sends data to createRun api endpoint
  */
 export const createRun = async () => {
+  logger.info("Creating run workflow request")
   try {
     const { endpoint, apiKey } = getData();
     const user = await getUser();
@@ -79,7 +87,9 @@ export const createRun = async () => {
         Authorization: "Bearer " + apiKey,
       },
     })
+    logger.info("Successfully created run workflow request")
   } catch(e) {
+    logger.error("Failed to create run request in the backend", e)
     throw new Error("Failed to create run request in the backend")
   }
 }
@@ -88,6 +98,7 @@ export const createRun = async () => {
  * Sends local workflow to the cloud to be stored
  */
 export const uploadLocalWorkflow = async () => {
+  logger.info("Uploading local workflow to cloud")
   try {
     const { endpoint, apiKey } = getData();
     const apiRoute = endpoint + "/api/workflow";
@@ -116,18 +127,21 @@ export const uploadLocalWorkflow = async () => {
 
     setWorkflowId(data.workflow_id)
     setVersion(data.version)
+
+    logger.info("Successfully uploaded local workflow to cloud")
   } catch (e) {
     // @todo
     // Handle potential reasons:
     // - user has no network connection
     // - user auth token expired
     // - server not responsive
-    console.log(e)
+    logger.error("Failed to upload workflow API to cloud",e)
     throw new Error("Failed to upload workflow API to cloud")
   }
 }
 
 export const syncDependencies = async (diff) => {
+  logger.info("Syncing dependencies")
   try {
     // update with new workflow
     const workflow_id = getWorkflowId()
@@ -197,47 +211,58 @@ export const syncDependencies = async (diff) => {
         method: "POST",
         body: JSON.stringify(body),
       })
-      console.log(res)
       if(res.status == 200) {
+        logger.info("Successfully synced dependencies")
         return {
           modelsToUpload,
           filesToUpload,
           nodesToUpload: dependenciesToUpload,
         }
       } else {
+        logger.error(`Error syncing dependencies. Failed to upload:
+          - (${modelsToUpload.length}) models
+          - (${filesToUpload.length}) files
+          - (${nodesToUpload.length}) custom nodes
+        `, res)
         throw new Error("Failed to upload dependencies to cloud")
       }
     }
   } catch (e) {
-    console.log(e)
     // Potential reason for failure here can be modal
     // servers are unresponsive
+    logger.error("Error syncing dependencies", e)
     throw new Error("Failed to upload dependencies to cloud")
   }
 }
 
 export const buildVenv = async () => {
+  logger.info("Starting build venv")
   try {
     const workflow_id = getWorkflowId()
     const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create"
     const body = {
       workflow_id,
     }
-    return await fetchRetry(url, {
+    const res = await fetchRetry(url, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     }, 2)
+
+    logger.info("Successfully built venv")
+
+    return res;
   } catch(e) {
-    // Potential reason for failure here can be modal
-    // servers are unresponsive
+
+    logger.error("Failed to build env in cloud", e)
     throw new Error("Failed to build env in cloud")
   }
 }
 
 export const buildVenvPartial = async (custom_nodes) => {
+  logger.info("Starting build venv")
   try {
     const workflow_id = getWorkflowId()
     const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create-partial"
@@ -245,16 +270,18 @@ export const buildVenvPartial = async (custom_nodes) => {
       workflow_id,
       custom_nodes
     }
-    return await fetchRetry(url, {
+    const res = await fetchRetry(url, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
     }, 2)
+    logger.info("Successfully built venv")
+    return res;
   } catch(e) {
-    // Potential reason for failure here can be modal
-    // servers are unresponsive
+
+    logger.error("Failed to build env in cloud", e)
     throw new Error("Failed to update env in cloud")
   }
 }

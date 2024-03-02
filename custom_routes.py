@@ -1,7 +1,6 @@
 from aiohttp import web
 import os
 import requests
-from requests.adapters import HTTPAdapter, Retry
 import folder_paths
 import json
 import numpy as np
@@ -27,6 +26,7 @@ import hashlib
 import aiohttp
 import importlib
 from user import load_user_profile
+import datetime
 #from nodes import NODE_CLASS_MAPPINGS
 
 api = None
@@ -83,6 +83,52 @@ def randomSeed(num_digits=15):
     range_start = 10 ** (num_digits - 1)
     range_end = (10**num_digits) - 1
     return random.randint(range_start, range_end)
+
+
+@server.PromptServer.instance.routes.post("/comfy-cloud/save-log")
+async def comfy_cloud_save_log(request):
+    try:
+        data = await request.json()
+        log = data.get("log")
+        log_id = log["logId"] #str
+        workflow_id = log["workflowId"] #str
+        user_id = log["userId"] #str
+
+        timestamp = datetime.datetime.now()
+        formatted_timestamp = timestamp.strftime("%Y_%B_%d_%H-%M-%S")
+
+        # Create the full path for the log file
+        filename = f"log_{formatted_timestamp}.txt"
+        current_path = os.getcwd()
+        directory = os.path.join(current_path, "logs")
+        log_path = os.path.join(directory, filename)
+
+        # Check if the directory exists, if not, create it
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
+        # Create a timestamp for the log entry
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        # Content to be written to the log file
+        log_content = f"Log entry created at: {timestamp}\n"
+        log_content += f"log_id: {log_id}\n"
+        log_content += f"workflow_id: {workflow_id}\n"
+        log_content += f"user_id: {user_id}\n"
+        log_content += f"---\n"
+
+        for log_entry in log["logs"]:
+            log_content += f"{log_entry}\n"
+
+        # Write the content to the log file
+        with open(log_path, 'w') as log_file:
+            log_file.write(log_content)
+
+        return web.json_response({ "success": True }, status=200)
+
+    except Exception as e:
+        print("Error:", e)
+        return web.json_response({ "error": e }, status=400)
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-prompt")

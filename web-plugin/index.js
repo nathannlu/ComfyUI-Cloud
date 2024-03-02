@@ -669,7 +669,9 @@ export class ConfigDialog extends ComfyDialog {
 
 import { getApiToken, validatePrompt, createMetaNode, getWorkflowId, compareWorkflows, isWorkflowUpToDate } from "./utils.js"
 import { uploadLocalWorkflow, syncDependencies, buildVenv, buildVenvPartial, getCloudWorkflow, createRun } from "./client.js"
+import { logger } from './logger.js';
 export async function onGeneration() {
+  logger.newLog();
   try {
     const { endpoint } = getData();
     setButtonDefault()
@@ -720,7 +722,6 @@ export async function onGeneration() {
       if(nodesToUpload) {
         await buildVenvPartial(nodesToUpload)
       }
-      // build venv
     }
 
     // Beyond this point, we assume all dependencies
@@ -736,9 +737,11 @@ export async function onGeneration() {
   } catch (e) {
     // handle error
     // @todo - log to error logger
-    console.log(e)
+    logger.error("onGeneration error", e)
+
     infoDialog.showMessage("Error", e);
   } finally {
+    await logger.saveLog()
     setButtonDefault()
     setMessage("")
   }

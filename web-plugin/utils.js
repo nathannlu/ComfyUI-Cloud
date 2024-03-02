@@ -7,11 +7,22 @@ import _ from 'https://cdn.jsdelivr.net/npm/@esm-bundle/lodash@4.17.21/+esm'
  */
 
 const endpoint = "https://comfycloud.vercel.app"
+
+export function generateUUID() {
+  let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+  return uuid;
+}
+
 /**
  * Retrieves deployment data from local storage or defaults.
  * @param {string} [environment] - The environment to get the data for.
  * @returns {{endpoint: string, apiKey: string, displayName: string, environment?: string}} The deployment data.
  */
+
 export function getData(environment) {
   const deployOption = 'cloud';
   const data = localStorage.getItem("comfy_cloud_env_data_" + deployOption);
