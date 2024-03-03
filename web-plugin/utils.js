@@ -1,4 +1,5 @@
 import _ from 'https://cdn.jsdelivr.net/npm/@esm-bundle/lodash@4.17.21/+esm'
+import { inputDialog } from './ui.js';
 
 /**
  * HELPERS
@@ -38,6 +39,13 @@ export function getData(environment) {
     endpoint: endpoint,
     environment: deployOption,
   };
+}
+
+export function saveData(data) {
+  localStorage.setItem(
+    "comfy_cloud_env_data_" + data.environment,
+    JSON.stringify(data),
+  );
 }
 
 export const createMetaNode = async () => {

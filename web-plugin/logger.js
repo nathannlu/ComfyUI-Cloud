@@ -4,7 +4,12 @@ import {
   generateUUID,
 } from "./utils.js"
 
-// Basic error logger for customer service debugging
+/**
+ * Basic error logger for customer service debugging
+/* creates log.txt files in /logs dir
+ */
+
+
 class Logger {
   constructor() {
     this.currentLogs = {}

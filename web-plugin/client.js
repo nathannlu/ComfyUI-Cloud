@@ -12,6 +12,12 @@ import {
 import { logger } from "./logger.js";
 import retry from "https://esm.sh/gh/vercel/async-retry";
 
+/**
+ * Calls endpoints from ComfyCloud API
+ *
+ *
+ */
+
 const fetchRetry = async (url, options = {}, retries) => {
   return await retry(
     async bail => {
@@ -50,8 +56,6 @@ export const getCloudWorkflow = async () => {
         Authorization: "Bearer " + apiKey,
       },
     }, 2)
-
-    console.log(existing_workflow)
 
     logger.info("Successfully retrieved workflow")
 
