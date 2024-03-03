@@ -1,7 +1,7 @@
 import os
 import sys
 
-WEB_DIRECTORY = "web-plugin"
+WEB_DIRECTORY = "js"
 NODE_CLASS_MAPPINGS = {}
 __all__ = ['NODE_CLASS_MAPPINGS']
 
