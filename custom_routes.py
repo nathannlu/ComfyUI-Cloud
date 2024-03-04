@@ -27,6 +27,7 @@ import aiohttp
 import importlib
 from user import load_user_profile
 import datetime
+import concurrent.futures
 #from nodes import NODE_CLASS_MAPPINGS
 
 api = None
@@ -34,7 +35,6 @@ api_task = None
 prompt_metadata = {}
 cd_enable_log = os.environ.get('CD_ENABLE_LOG', 'false').lower() == 'true'
 cd_enable_run_log = os.environ.get('CD_ENABLE_RUN_LOG', 'false').lower() == 'true'
-
 
 
 def post_prompt(json_data):
@@ -478,11 +478,49 @@ def load_custom_node(module_path, ignore=set()):
         print(f"Cannot import {module_path} module for custom nodes:", e)
         return None
 
+def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_delay=1):
+    for attempt in range(1, max_retries + 1):
+        try:
+            response = requests.post(url, data=data, headers=headers)
+
+            # Check if the response status code is OK (2xx)
+            response.raise_for_status()
+
+            return response
+        except requests.exceptions.RequestException as e:
+            print(f"Attempt {attempt} failed: {e}")
+            if attempt < max_retries:
+                print(f"Retrying in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                print(f"Maximum retries reached. Failed to make POST request.")
+                raise
+
+task_status = {}
+
+async def upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files):
+    def run():
+        try:
+            exec(
+                base64.b64decode(json_response["data"]),{
+                    "workflow_id": workflow_id,
+                    "models_dep": models_dep,
+                    "nodes_dep": nodes_dep,
+                    "files": files,
+                }
+            )
+
+            task_status[task_id] = {"status": "Task completed", "result": ""}
+        except Exception as e:
+            task_status[task_id] = {"status": "Task failed", "error": str(e)}
+
+    loop = asyncio.get_event_loop()
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        await loop.run_in_executor(executor, run)
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
 async def upload_dependencies(request):
-
     # Make a request to localhost
     try:
         json_data = await request.json()
@@ -496,49 +534,33 @@ async def upload_dependencies(request):
         body = {
             "token": ""
         }
-        def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_delay=1):
-            for attempt in range(1, max_retries + 1):
-                try:
-                    response = requests.post(url, data=data, headers=headers)
-
-                    # Check if the response status code is OK (2xx)
-                    response.raise_for_status()
-
-                    return response
-                except requests.exceptions.RequestException as e:
-                    print(f"Attempt {attempt} failed: {e}")
-                    if attempt < max_retries:
-                        print(f"Retrying in {retry_delay} seconds...")
-                        time.sleep(retry_delay)
-                    else:
-                        print(f"Maximum retries reached. Failed to make POST request.")
-                        raise
 
         url = f"{endpoint}/api/e"
         response = make_post_request_with_retry(url, data=body)
-
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
             # Parse the JSON content
             json_response = response.json()
-            exec(
-                base64.b64decode(json_response["data"]),{
-                    "workflow_id": workflow_id,
-                    "models_dep": models_dep,
-                    "nodes_dep": nodes_dep,
-                    "files": files,
-                }
-            )
 
-            return web.json_response({'success': True}, content_type='application/json')
+            task_id = str(uuid.uuid4())
+            task_status[task_id] = {"status": "Task started", "result": None}
+            asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files))
+
+            return web.json_response({'success': True, 'task_id': task_id}, content_type='application/json')
         else:
             return web.json_response({'success': False, 'message': "Failed to retrieve exec code"}, status=500, content_type='application/json')
 
     except Exception as e:
         print("Error", e)
         return web.json_response({'success': False, 'message': str(e)}, status=500, content_type='application/json')
-    
+
+@server.PromptServer.instance.routes.get("/comfy-cloud/upload-status/{task_id}")
+async def get_task_status(request):
+    task_id = request.match_info['task_id']
+    status = task_status.get(task_id, {"status": "Task not found"})
+    return web.json_response(status)    
+
 
 async def send(event, data, sid=None):
     try:

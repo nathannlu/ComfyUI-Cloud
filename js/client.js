@@ -101,6 +101,52 @@ export const createRun = async () => {
 /**
  * Sends local workflow to the cloud to be stored
  */
+export const createEmptyWorkflow = async () => {
+  logger.info("Uploading local workflow to cloud")
+  try {
+    const { endpoint, apiKey } = getData();
+    const apiRoute = endpoint + "/api/workflow";
+    const prompt = await app.graphToPrompt();
+
+    const body = {
+      workflow_name: getWorkflowName(),
+      workflow_id: getWorkflowId(),
+      workflow: {},
+      workflow_api: {},
+      snapshot: {
+        comfyui: "",
+        git_custom_nodes: {},
+        file_custom_nodes: [],
+      },
+    };
+    //let data = { status: 200 }
+    let data = await fetchRetry(apiRoute, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    }, 2);
+
+    setWorkflowId(data.workflow_id)
+    setVersion(data.version)
+
+    logger.info("Successfully uploaded local workflow to cloud")
+  } catch (e) {
+    // @todo
+    // Handle potential reasons:
+    // - user has no network connection
+    // - user auth token expired
+    // - server not responsive
+    logger.error("Failed to upload workflow API to cloud",e)
+    throw new Error("Failed to upload workflow API to cloud")
+  }
+}
+
+/**
+ * Sends local workflow to the cloud to be stored
+ */
 export const uploadLocalWorkflow = async () => {
   logger.info("Uploading local workflow to cloud")
   try {
@@ -215,8 +261,11 @@ export const syncDependencies = async (diff) => {
       })
 
       if(res.status == 200) {
+        const data = await res.json();
+
         logger.info("Successfully synced dependencies")
         return {
+          taskId: data?.task_id,
           modelsToUpload,
           filesToUpload,
           nodesToUpload: dependenciesToUpload,
@@ -237,6 +286,28 @@ export const syncDependencies = async (diff) => {
     // servers are unresponsive
     logger.error("Error syncing dependencies", e)
     throw new Error("Failed to upload dependencies to cloud")
+  }
+}
+
+export const pollSyncDependencies = async (taskId) => {
+  let status = '';
+  while (status !== 'Task completed' && status !== 'Task failed') {
+    await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before the next poll
+
+    try {
+      const statusResponse = await fetch(`/comfy-cloud/upload-status/${taskId}`);
+      const statusData = await statusResponse.json();
+      status = statusData.status;
+
+      logger.info(`Received from polling for upload status: ${status}`);
+    } catch(e) {
+      logger.error("fetch error when polling for upload status", e)
+    }
+
+  }
+
+  if (status == "Task failed") {
+    throw new Error("Failed to upload")
   }
 }
 

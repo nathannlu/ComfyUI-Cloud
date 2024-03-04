@@ -1,9 +1,11 @@
 import { 
   uploadLocalWorkflow, 
   syncDependencies, 
+  pollSyncDependencies, 
   buildVenv, 
   buildVenvPartial, 
   getCloudWorkflow, 
+  createEmptyWorkflow,
   createRun
 } from "./client.js"
 import { 
@@ -53,16 +55,18 @@ export async function onGeneration() {
     setButtonLoading();
 
     if(isNewWorkflow) {
-      setMessage("Creating new workflow. This may take awhile");
       // Wait for user to input workflow name
       await createMetaNode();
+      await createEmptyWorkflow()
 
-      await uploadLocalWorkflow()
+      setMessage("Creating new workflow. This may take awhile");
+      const { taskId, nodesToUpload } = await syncDependencies(localWorkflow.output)
+      await pollSyncDependencies(taskId)
 
-      setMessage("Syncing dependencies...");
-      await syncDependencies(localWorkflow.output)
       setMessage("Building environment...");
       await buildVenv()
+
+      await uploadLocalWorkflow()
     }
 
     // compare workflow
@@ -72,16 +76,17 @@ export async function onGeneration() {
 
     // sync workflow
     if(!isWorkflowUpToDate(diffDeps)) {
-      setMessage("Changes detected, syncing...");
-      await uploadLocalWorkflow()
 
       setMessage("Syncing dependencies...");
-      const { nodesToUpload } = await syncDependencies(diffDeps)
+      const { taskId, nodesToUpload } = await syncDependencies(diffDeps)
+      await pollSyncDependencies(taskId)
 
       if(nodesToUpload) {
         setMessage("Building environment...");
         await buildVenvPartial(nodesToUpload)
       }
+
+      await uploadLocalWorkflow()
     }
 
     // Beyond this point, we assume all dependencies
