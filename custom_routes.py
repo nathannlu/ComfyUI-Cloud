@@ -512,7 +512,7 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
 
             task_status[task_id] = {"status": "Task completed", "result": ""}
         except Exception as e:
-            task_status[task_id] = {"status": "Task failed", "error": str(e)}
+            task_status[task_id] = {"status": f"Task failed: {str(e)}", "error": str(e)}
 
     loop = asyncio.get_event_loop()
     with concurrent.futures.ThreadPoolExecutor() as executor:
