@@ -311,6 +311,7 @@ export const pollSyncDependencies = async (taskId) => {
   }
 }
 
+/*
 export const buildVenv = async () => {
   logger.info("Starting build venv")
   try {
@@ -336,12 +337,13 @@ export const buildVenv = async () => {
     throw new Error("Failed to build env in cloud")
   }
 }
+*/
 
-export const buildVenvPartial = async (custom_nodes) => {
+export const buildVenv = async (custom_nodes) => {
   logger.info("Starting build venv")
   try {
     const workflow_id = getWorkflowId()
-    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create-partial"
+    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create"
     const body = {
       workflow_id,
       custom_nodes
@@ -361,5 +363,6 @@ export const buildVenvPartial = async (custom_nodes) => {
     throw new Error("Failed to update env in cloud")
   }
 }
+
 
 

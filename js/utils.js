@@ -1,13 +1,12 @@
 import _ from 'https://cdn.jsdelivr.net/npm/@esm-bundle/lodash@4.17.21/+esm'
 import { inputDialog } from './ui.js';
+import { endpoint } from './constants.js';
 
 /**
  * HELPERS
  *
  * File for helper functions, local network api's
  */
-
-const endpoint = "https://comfycloud.vercel.app"
 
 export function generateUUID() {
   let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {

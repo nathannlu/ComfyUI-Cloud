@@ -3,7 +3,7 @@ import {
   syncDependencies, 
   pollSyncDependencies, 
   buildVenv, 
-  buildVenvPartial, 
+  //buildVenvPartial, 
   getCloudWorkflow, 
   createEmptyWorkflow,
   createRun
@@ -64,7 +64,7 @@ export async function onGeneration() {
       await pollSyncDependencies(taskId)
 
       setMessage("Building environment...");
-      await buildVenv()
+      await buildVenv(nodesToUpload)
 
       await uploadLocalWorkflow()
     }
@@ -83,7 +83,7 @@ export async function onGeneration() {
 
       if(nodesToUpload) {
         setMessage("Building environment...");
-        await buildVenvPartial(nodesToUpload)
+        await buildVenv(nodesToUpload)
       }
 
       await uploadLocalWorkflow()

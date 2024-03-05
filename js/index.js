@@ -4,8 +4,8 @@ import { ComfyWidgets, LGraphNode } from "./widgets.js";
 
 import { getData, saveData, getApiToken, validatePrompt, getWorkflowId, compareWorkflows, isWorkflowUpToDate } from "./utils.js"
 import { addButton } from './ui.js';
+import { endpoint } from './constants.js';
 
-const endpoint = "https://comfycloud.vercel.app"
 
 /** @type {LGraphNode}*/
 class ComfyCloud {
@@ -54,7 +54,7 @@ class ComfyCloud {
 const ext = {
   name: "nathannlu.ComfyCloud",
 
-  endpoint: "https://comfycloud.vercel.app",
+  endpoint: endpoint,
 
   init(app) {
     addButton();

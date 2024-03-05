@@ -433,6 +433,7 @@ async def get_custom_nodes_list(request):
             if module_path.endswith(".disabled"): continue
             #time_before = time.perf_counter()
             mappings = load_custom_node(module_path) #, base_node_names)
+            print(mappings)
             custom_nodes[mappings[0]] = mappings[1]
 
     return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
@@ -472,11 +473,11 @@ def load_custom_node(module_path, ignore=set()):
             return (module_name, mappings)
         else:
             print(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
-            return False
+            return (module_name, [])
     except Exception as e:
         print(traceback.format_exc())
         print(f"Cannot import {module_path} module for custom nodes:", e)
-        return None
+        return (module_name, [])
 
 def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_delay=1):
     for attempt in range(1, max_retries + 1):
@@ -751,6 +752,7 @@ async def upload_file(prompt_id, filename, subfolder=None, content_type="image/p
     
     with open(file, 'rb') as f:
         data = f.read()
+
         headers = {
             "x-amz-acl": "public-read",
             "Content-Type": content_type,
