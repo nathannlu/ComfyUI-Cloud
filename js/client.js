@@ -355,12 +355,16 @@ export const buildVenv = async (custom_nodes) => {
       },
       body: JSON.stringify(body),
     }, 2)
+
+    if(res?.status != "success") {
+      throw new Error("Failed to build env in cloud")
+    }
     logger.info("Successfully built venv")
     return res;
   } catch(e) {
 
     logger.error("Failed to build env in cloud", e)
-    throw new Error("Failed to update env in cloud")
+    throw new Error("Failed to build env in cloud")
   }
 }
 

@@ -28,6 +28,8 @@ import importlib
 from user import load_user_profile
 import datetime
 import concurrent.futures
+from node_packager import package_custom_nodes
+import shutil
 #from nodes import NODE_CLASS_MAPPINGS
 
 api = None
@@ -433,7 +435,6 @@ async def get_custom_nodes_list(request):
             if module_path.endswith(".disabled"): continue
             #time_before = time.perf_counter()
             mappings = load_custom_node(module_path) #, base_node_names)
-            print(mappings)
             custom_nodes[mappings[0]] = mappings[1]
 
     return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
@@ -511,6 +512,8 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
                 }
             )
 
+            # cleanup temp
+            shutil.rmtree("./temp")
             task_status[task_id] = {"status": "Task completed", "result": ""}
         except Exception as e:
             task_status[task_id] = {"status": f"Task failed: {str(e)}", "error": str(e)}
@@ -543,10 +546,24 @@ async def upload_dependencies(request):
         if response.status_code == 200:
             # Parse the JSON content
             json_response = response.json()
-
             task_id = str(uuid.uuid4())
             task_status[task_id] = {"status": "Task started", "result": None}
-            asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files))
+
+            # Process custom nodes
+            os.makedirs("./temp", exist_ok=True)
+            custom_nodes_bytes = {}
+            for name in nodes_dep:
+
+                buf = package_custom_nodes(f"../../custom_nodes/{name}")
+
+                content = buf.getvalue()
+                custom_nodes_bytes[name] = content
+
+                file_path = os.path.join("./temp", name)
+                with open(file_path, 'wb') as file:
+                    file.write(content)
+
+            asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, custom_nodes_bytes, files))
 
             return web.json_response({'success': True, 'task_id': task_id}, content_type='application/json')
         else:

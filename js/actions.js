@@ -78,12 +78,14 @@ export async function onGeneration() {
     if(!isWorkflowUpToDate(diffDeps)) {
 
       setMessage("Syncing dependencies...");
-      const { taskId, nodesToUpload } = await syncDependencies(diffDeps)
-      await pollSyncDependencies(taskId)
+      const s = await syncDependencies(diffDeps)
+      if(s?.taskId) {
+        await pollSyncDependencies(s.taskId)
+      }
 
-      if(nodesToUpload) {
+      if(s?.nodesToUpload) {
         setMessage("Building environment...");
-        await buildVenv(nodesToUpload)
+        await buildVenv(s.nodesToUpload)
       }
 
       await uploadLocalWorkflow()
