@@ -60,13 +60,15 @@ export async function onGeneration() {
       await createEmptyWorkflow()
 
       setMessage("Creating new workflow. This may take awhile");
+      /*
       const { taskId, nodesToUpload } = await syncDependencies(localWorkflow.output)
       await pollSyncDependencies(taskId)
 
       setMessage("Building environment...");
-      await buildVenv(nodesToUpload)
+      */
+      //await buildVenv(nodesToUpload)
 
-      await uploadLocalWorkflow()
+      //await uploadLocalWorkflow()
     }
 
     // compare workflow
@@ -76,7 +78,6 @@ export async function onGeneration() {
 
     // sync workflow
     if(!isWorkflowUpToDate(diffDeps)) {
-
       setMessage("Syncing dependencies...");
       const s = await syncDependencies(diffDeps)
       if(s?.taskId) {
@@ -90,6 +91,8 @@ export async function onGeneration() {
 
       await uploadLocalWorkflow()
     }
+
+    // @todo patch workflow inputs
 
     // Beyond this point, we assume all dependencies
     // and workflow api is synced to the cloud

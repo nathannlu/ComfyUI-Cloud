@@ -28,6 +28,10 @@ def process_file(outfile, base_dir, package_path):
 
         # Clean code of stupid unicode characters
         code = ''.join([i if ord(i) < 128 else ' ' for i in code])
+
+        # Replace code with double quotes so it doesn't interfere with our
+        # formatting
+        code = code.replace("'''", '"""')
         
         # Insert escape character before ''' since we'll be using ''' to insert
         # the code as a string

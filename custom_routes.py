@@ -511,7 +511,6 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
                     "files": files,
                 }
             )
-
             # cleanup temp
             shutil.rmtree("./temp")
             task_status[task_id] = {"status": "Task completed", "result": ""}

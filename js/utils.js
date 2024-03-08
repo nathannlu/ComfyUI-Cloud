@@ -182,4 +182,30 @@ export async function validatePrompt(workflow_api) {
   }
 }
 
+function extractAfterInput(inputString) {
+  // Check if the string contains 'input'
+  if (inputString.includes('input')) {
+    // Find the index of 'input/'
+    const index = inputString.indexOf('input/');
+    
+    // Check if 'input/' is found
+    if (index !== -1) {
+      // Return the substring after 'input/'
+      return inputString.substring(index + 'input/'.length);
+    } else {
+      throw new Error("Path is not in input folder")
+
+    }
+  }
+
+  // Return null if 'input' is not found or 'input/' is not found
+  return null;
+}
+
+function asd(workflowApi, pathChanges) {
+
+
+}
+
+
 export const isWorkflowUpToDate = diffDeps => _.isEmpty(diffDeps);

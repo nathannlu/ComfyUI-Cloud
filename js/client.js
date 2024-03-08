@@ -210,7 +210,8 @@ export const syncDependencies = async (diff) => {
     let modelsToUpload = []
     let dependenciesToUpload = []
     let filesToUpload = []
-    for (const v of Object.values(diff)) {
+    let pathChanges = []
+    for (const [k, v] of Object.entries(diff)) {
       // Upload necessary images
       if (v?.class_type == 'LoadImage') {
         filesToUpload.push(v.inputs.image)
@@ -218,8 +219,25 @@ export const syncDependencies = async (diff) => {
 
       // Upload necessary images
       if (v?.inputs) {
-        for (const z of Object.values(v?.inputs)) {
+        for (const [l,z] of Object.entries(v?.inputs)) {
           if (typeof z == "string") {
+            // Handle VHS video extensions
+            if (
+              z.endsWith('.webm') ||
+              z.endsWith('.mp4') ||
+              z.endsWith('.mkv') ||
+              z.endsWith('.gif')
+            ) {
+              filesToUpload.push(z)
+              pathChanges.push({
+                key: k,
+                node: v,
+                input_property: l,
+                input_value: z,
+              })
+            }
+
+            // Handle models, LoRAs, and checkpoints
             if (
               z.endsWith('.safetensors') ||
               z.endsWith('.pth') ||
@@ -311,34 +329,6 @@ export const pollSyncDependencies = async (taskId) => {
   }
 }
 
-/*
-export const buildVenv = async () => {
-  logger.info("Starting build venv")
-  try {
-    const workflow_id = getWorkflowId()
-    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create"
-    const body = {
-      workflow_id,
-    }
-    const res = await fetchRetry(url, {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }, 2)
-
-    logger.info("Successfully built venv")
-
-    return res;
-  } catch(e) {
-
-    logger.error("Failed to build env in cloud", e)
-    throw new Error("Failed to build env in cloud")
-  }
-}
-*/
-
 export const buildVenv = async (custom_nodes) => {
   logger.info("Starting build venv")
   try {
@@ -348,13 +338,13 @@ export const buildVenv = async (custom_nodes) => {
       workflow_id,
       custom_nodes
     }
-    const res = await fetchRetry(url, {
+    const res = await fetch(url, {
       method: "POST",
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(body),
-    }, 2)
+    }).then(x => x.json())
 
     if(res?.status != "success") {
       throw new Error("Failed to build env in cloud")
