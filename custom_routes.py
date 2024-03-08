@@ -518,13 +518,13 @@ def update_dependencies():
             for line in lines:
               # Check if the line contains a git dependency without the specified format
                 match_git = re.match(r'^\s*git\+https://.*?/([^/]+)\.git', line)
-                match_git_plus = re.match(r'^\s*git\+https://.*?/([^/]+)', line)
+                match_git_plus = re.match(r'^\s*git\+https://.*?/([^/]+)$', line)
                 
                 if match_git:
                     package_name = match_git.group(1)
                     updated_lines.append(f"{package_name} @ {line.strip()}\n")
                 elif match_git_plus:
-                    package_name = match_git_plus.group(1)
+                    package_name = match_git_plus.group(1).strip()
                     updated_lines.append(f"{package_name} @ {line.strip()}\n")
                 else:
                     updated_lines.append(line)
@@ -545,7 +545,6 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
                 }
             )
             # cleanup temp
-            shutil.rmtree("./temp")
             task_status[task_id] = {"status": "Task completed", "result": ""}
         except Exception as e:
             task_status[task_id] = {"status": f"Task failed: {str(e)}", "error": str(e)}
@@ -585,6 +584,8 @@ async def upload_dependencies(request):
             update_dependencies()
 
             custom_nodes_bytes = {}
+            for name in nodes_dep:
+                custom_nodes_bytes[name] = ""
             """
             os.makedirs("./temp", exist_ok=True)
             for name in nodes_dep:
