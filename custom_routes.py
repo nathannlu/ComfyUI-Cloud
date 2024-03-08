@@ -500,6 +500,39 @@ def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_d
 
 task_status = {}
 
+
+def update_dependencies():
+    # Loop over the files in the specified directory
+    for custom_node in os.listdir("../../custom_nodes/"):
+        filepath = os.path.join("../../custom_nodes", custom_node, "requirements.txt")
+        
+        # Check if the file is a requirements.txt file
+        if os.path.exists(filepath):
+ 
+            # Read the content of the requirements.txt file
+            with open(filepath, 'r') as file:
+                lines = file.readlines()
+            
+            # Update dependencies in the file content
+            updated_lines = []
+            for line in lines:
+              # Check if the line contains a git dependency without the specified format
+                match_git = re.match(r'^\s*git\+https://.*?/([^/]+)\.git', line)
+                match_git_plus = re.match(r'^\s*git\+https://.*?/([^/]+)', line)
+                
+                if match_git:
+                    package_name = match_git.group(1)
+                    updated_lines.append(f"{package_name} @ {line.strip()}\n")
+                elif match_git_plus:
+                    package_name = match_git_plus.group(1)
+                    updated_lines.append(f"{package_name} @ {line.strip()}\n")
+                else:
+                    updated_lines.append(line)
+            
+            # Write the updated content back to the requirements.txt file
+            with open(filepath, 'w') as file:
+                file.writelines(updated_lines)
+            
 async def upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files):
     def run():
         try:
@@ -549,8 +582,11 @@ async def upload_dependencies(request):
             task_status[task_id] = {"status": "Task started", "result": None}
 
             # Process custom nodes
-            os.makedirs("./temp", exist_ok=True)
+            update_dependencies()
+
             custom_nodes_bytes = {}
+            """
+            os.makedirs("./temp", exist_ok=True)
             for name in nodes_dep:
 
                 buf = package_custom_nodes(f"../../custom_nodes/{name}")
@@ -561,6 +597,7 @@ async def upload_dependencies(request):
                 file_path = os.path.join("./temp", name)
                 with open(file_path, 'wb') as file:
                     file.write(content)
+            """
 
             asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, custom_nodes_bytes, files))
 

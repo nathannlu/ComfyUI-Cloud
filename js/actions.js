@@ -86,7 +86,7 @@ export async function onGeneration() {
 
       if(s?.nodesToUpload) {
         setMessage("Building environment...");
-        await buildVenv(s.nodesToUpload)
+        //await buildVenv(s.nodesToUpload)
       }
 
       await uploadLocalWorkflow()
