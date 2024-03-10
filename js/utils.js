@@ -56,8 +56,12 @@ export const createMetaNode = async () => {
   app.graph.beforeChange();
 
   var node = LiteGraph.createNode("ComfyCloud");
+
   node.configure({
     widgets_values: [text],
+    properties: {
+      workflow_name: text,
+    }
   });
   node.pos = [0, 0];
 
@@ -86,16 +90,19 @@ export const getWorkflowName = () => {
   // @todo 
   // handle no deployMetaNode
 
-  const name = deployMetaNode.widgets[0].value;
-  return name;
+  const { workflow_name } = deployMetaNode.properties;
+  //const name = deployMetaNode.widgets[0].value;
+  return workflow_name;
 }
 export const getWorkflowId = () => {
   let deployMeta = graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
+
   // @todo 
   // handle no deployMetaNode
 
-  const workflow_id = deployMetaNode.widgets[1].value;
+  const { workflow_id } = deployMetaNode.properties;
+  //const workflow_id = deployMetaNode.widgets[1].value;
   return workflow_id;
 }
 export const getVersion = () => {
@@ -104,7 +111,8 @@ export const getVersion = () => {
   // @todo 
   // handle no deployMetaNode
 
-  const version = deployMetaNode.widgets[2].value;
+  const { version } = deployMetaNode.properties;
+  //const version = deployMetaNode.widgets[2].value;
   return version;
 }
 
@@ -113,14 +121,16 @@ export const setWorkflowId = (id) => {
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
-  deployMetaNode.widgets[1].value = id;
+  //deployMetaNode.widgets[1].value = version;
+  deployMetaNode.properties.workflow_id = id;
 }
 export const setVersion = (version) => {
   let deployMeta = graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
-  deployMetaNode.widgets[2].value = version;
+  //deployMetaNode.widgets[2].value = version;
+  deployMetaNode.properties.version = version;
 }
 
 export const isCustomNode = (class_type) => {
