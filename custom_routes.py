@@ -30,6 +30,7 @@ import datetime
 import concurrent.futures
 from node_packager import package_custom_nodes
 import shutil
+import copy
 #from nodes import NODE_CLASS_MAPPINGS
 
 api = None
@@ -554,6 +555,8 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
         await loop.run_in_executor(executor, run)
 
 
+
+
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
 async def upload_dependencies(request):
     # Make a request to localhost
@@ -584,21 +587,28 @@ async def upload_dependencies(request):
             update_dependencies()
 
             custom_nodes_bytes = {}
+
+            paths = copy.deepcopy(folder_paths.folder_names_and_paths)
+            paths.pop("custom_nodes", None)
+            paths.pop("configs", None)
+
+            # Upload models
+            for name in models_dep:
+                found = False
+                for base_dir in paths.keys():
+                    #print("ooga",folder_paths.get_filename_list(key))
+                    if name in folder_paths.get_filename_list(base_dir):
+                        if os.path.exists(f"../../models/{base_dir}/{name}"):
+                            found = True
+
+                if found is False:
+                    return web.json_response({'success': False, 'message': f"Required model {name} was not found in your ComfyUI/models folder. Make sure you do not have extra_paths.yaml enabled"}, content_type='application/json')
+
             for name in nodes_dep:
+                # check filepath exists
+                if not os.path.exists(f"../../custom_nodes/{name}"):
+                    return web.json_response({'success': False, 'message': f"Required node {name} was not found in your ComfyUI/custom_nodes folder. Make sure you do not have extra_paths.yaml enabled"}, content_type='application/json')
                 custom_nodes_bytes[name] = ""
-            """
-            os.makedirs("./temp", exist_ok=True)
-            for name in nodes_dep:
-
-                buf = package_custom_nodes(f"../../custom_nodes/{name}")
-
-                content = buf.getvalue()
-                custom_nodes_bytes[name] = content
-
-                file_path = os.path.join("./temp", name)
-                with open(file_path, 'wb') as file:
-                    file.write(content)
-            """
 
             asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, custom_nodes_bytes, files))
 

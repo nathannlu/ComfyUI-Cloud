@@ -281,12 +281,22 @@ export const syncDependencies = async (diff) => {
       if(res.status == 200) {
         const data = await res.json();
 
-        logger.info("Successfully synced dependencies")
-        return {
-          taskId: data?.task_id,
-          modelsToUpload,
-          filesToUpload,
-          nodesToUpload: dependenciesToUpload,
+        if (data?.success) {
+          logger.info("Successfully synced dependencies")
+          return {
+            taskId: data?.task_id,
+            modelsToUpload,
+            filesToUpload,
+            nodesToUpload: dependenciesToUpload,
+          }
+        } else {
+          logger.error(`Error syncing dependencies. Failed to upload:
+            - (${modelsToUpload?.length}) models
+            - (${filesToUpload?.length}) files
+            - (${dependenciesToUpload?.length}) custom nodes
+          `, data?.message)
+
+          throw new Error(`${data?.message}`)
         }
       } else {
         const data = await res.json();
@@ -303,7 +313,11 @@ export const syncDependencies = async (diff) => {
     // Potential reason for failure here can be modal
     // servers are unresponsive
     logger.error("Error syncing dependencies", e)
+    if(e.message) {
+      throw new Error(e.message)
+    } else {
     throw new Error("Failed to upload dependencies to cloud")
+    }
   }
 }
 
