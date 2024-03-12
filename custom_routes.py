@@ -28,7 +28,6 @@ import importlib
 from user import load_user_profile
 import datetime
 import concurrent.futures
-from node_packager import package_custom_nodes
 import shutil
 import copy
 #from nodes import NODE_CLASS_MAPPINGS
