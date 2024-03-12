@@ -3,4 +3,5 @@ __pycache__/
 .comfycloud_profile
 /logs
 /temp
+node_modules
 

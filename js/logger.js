@@ -43,7 +43,7 @@ class Logger {
       log: this.currentLogs,
     }
 
-    const data = await fetch("/comfy-cloud/save-log", {
+    await fetch("/comfy-cloud/save-log", {
       method: "POST",
       body: JSON.stringify(body),
     }).then((x) => x.json())

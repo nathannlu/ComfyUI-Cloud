@@ -10,7 +10,9 @@ import {
   isCustomNode,
 } from './utils.js'
 import { logger } from "./logger.js";
+import { app } from './comfy/comfy.js';
 import retry from "https://esm.sh/gh/vercel/async-retry";
+import { endpoint } from './constants.js';
 
 /**
  * Calls endpoints from ComfyCloud API
@@ -83,7 +85,7 @@ export const createRun = async () => {
       user_id: user?.id,
       inputs: {},
     }
-    let data = await fetch(apiRoute, {
+    await fetch(apiRoute, {
       method: "POST",
       body: JSON.stringify(body),
       headers: {
@@ -106,7 +108,6 @@ export const createEmptyWorkflow = async () => {
   try {
     const { endpoint, apiKey } = getData();
     const apiRoute = endpoint + "/api/workflow";
-    const prompt = await app.graphToPrompt();
 
     const body = {
       workflow_name: getWorkflowName(),
@@ -369,6 +370,21 @@ export const buildVenv = async (custom_nodes) => {
 
     logger.error("Failed to build env in cloud", e)
     throw new Error("Failed to build env in cloud")
+  }
+}
+
+export async function addPing() {
+  const { user } = await fetch(
+    '/comfy-cloud/user',
+  ).then((x) => x.json())
+
+  const userId = user?.id;
+
+  if(userId) {
+    const menu = document.querySelector(".comfy-menu");
+    const i = document.createElement('img');
+    i.src = `${endpoint}/api/p?e=${userId}`
+    menu.appendChild(i);
   }
 }
 
