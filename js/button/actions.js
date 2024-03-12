@@ -2,12 +2,10 @@ import {
   uploadLocalWorkflow, 
   syncDependencies, 
   pollSyncDependencies, 
-  buildVenv, 
-  //buildVenvPartial, 
   getCloudWorkflow, 
   createEmptyWorkflow,
   createRun
-} from "./client.js"
+} from "../client.js"
 import { 
   getData, 
   createMetaNode, 
@@ -16,15 +14,21 @@ import {
   getWorkflowId, 
   compareWorkflows, 
   isWorkflowUpToDate
-} from "./utils.js"
+} from "../utils.js"
+import { 
+  app,
+} from '../comfy/comfy.js'; 
 import { 
   configDialog, 
   infoDialog,
+} from '../comfy/ui.js'; 
+import { 
   setButtonDefault,
   setButtonLoading,
   setMessage,
 } from './ui.js'; 
-import { logger } from './logger.js';
+import { logger } from '../logger.js';
+
 
 export async function onGeneration() {
   logger.newLog();
@@ -42,7 +46,7 @@ export async function onGeneration() {
     }
 
     // check if ComfyCloud meta node exists
-    const deployMeta = graph.findNodesByType("ComfyCloud");
+    const deployMeta = app.graph.findNodesByType("ComfyCloud");
     const isNewWorkflow = deployMeta.length == 0
 
     const localWorkflow = await app.graphToPrompt();
@@ -60,15 +64,6 @@ export async function onGeneration() {
       await createEmptyWorkflow()
 
       setMessage("Creating new workflow. This may take awhile");
-      /*
-      const { taskId, nodesToUpload } = await syncDependencies(localWorkflow.output)
-      await pollSyncDependencies(taskId)
-
-      setMessage("Building environment...");
-      */
-      //await buildVenv(nodesToUpload)
-
-      //await uploadLocalWorkflow()
     }
 
     // compare workflow
@@ -86,7 +81,6 @@ export async function onGeneration() {
 
       if(s?.nodesToUpload) {
         setMessage("Building environment...");
-        //await buildVenv(s.nodesToUpload)
       }
 
       await uploadLocalWorkflow()

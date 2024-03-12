@@ -1,0 +1,27 @@
+{
+  "name": "comfyui-clouds",
+  "version": "1.0.0",
+  "description": "",
+  "main": "/js",
+  "scripts": {
+    "lint-staged": "lint-staged",
+    "prepare": "husky"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "./node_modules/.bin/eslint --fix"
+    ]
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "husky": "^9.0.11",
+    "lint-staged": "^15.2.2"
+  }
+}

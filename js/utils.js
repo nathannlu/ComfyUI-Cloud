@@ -1,5 +1,6 @@
 import _ from 'https://cdn.jsdelivr.net/npm/@esm-bundle/lodash@4.17.21/+esm'
-import { inputDialog } from './ui.js';
+import { app } from './comfy/comfy.js';
+import { inputDialog } from './comfy/ui.js';
 import { endpoint } from './constants.js';
 
 /**
@@ -23,7 +24,7 @@ export function generateUUID() {
  * @returns {{endpoint: string, apiKey: string, displayName: string, environment?: string}} The deployment data.
  */
 
-export function getData(environment) {
+export function getData() {
   const deployOption = 'cloud';
   const data = localStorage.getItem("comfy_cloud_env_data_" + deployOption);
 
@@ -85,7 +86,7 @@ export const getApiToken = () => {
 }
 
 export const getWorkflowName = () => {
-  let deployMeta = graph.findNodesByType("ComfyCloud");
+  let deployMeta = app.graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
@@ -95,7 +96,7 @@ export const getWorkflowName = () => {
   return workflow_name;
 }
 export const getWorkflowId = () => {
-  let deployMeta = graph.findNodesByType("ComfyCloud");
+  let deployMeta = app.graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
 
   // @todo 
@@ -106,7 +107,7 @@ export const getWorkflowId = () => {
   return workflow_id;
 }
 export const getVersion = () => {
-  let deployMeta = graph.findNodesByType("ComfyCloud");
+  let deployMeta = app.graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
@@ -117,7 +118,7 @@ export const getVersion = () => {
 }
 
 export const setWorkflowId = (id) => {
-  let deployMeta = graph.findNodesByType("ComfyCloud");
+  let deployMeta = app.graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
@@ -125,7 +126,7 @@ export const setWorkflowId = (id) => {
   deployMetaNode.properties.workflow_id = id;
 }
 export const setVersion = (version) => {
-  let deployMeta = graph.findNodesByType("ComfyCloud");
+  let deployMeta = app.graph.findNodesByType("ComfyCloud");
   const deployMetaNode = deployMeta[0];
   // @todo 
   // handle no deployMetaNode
@@ -192,7 +193,7 @@ export async function validatePrompt(workflow_api) {
   }
 }
 
-function extractAfterInput(inputString) {
+export function extractAfterInput(inputString) {
   // Check if the string contains 'input'
   if (inputString.includes('input')) {
     // Find the index of 'input/'
@@ -210,11 +211,6 @@ function extractAfterInput(inputString) {
 
   // Return null if 'input' is not found or 'input/' is not found
   return null;
-}
-
-function asd(workflowApi, pathChanges) {
-
-
 }
 
 
