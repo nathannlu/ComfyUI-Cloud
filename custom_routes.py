@@ -94,7 +94,7 @@ async def comfy_cloud_save_log(request):
         data = await request.json()
         log = data.get("log")
         log_id = log["logId"] #str
-        workflow_id = log["workflowId"] #str
+        workflow_id = log.get("workflowId") #str
         user_id = log["userId"] #str
 
         timestamp = datetime.datetime.now()
