@@ -15,7 +15,7 @@ import requests
 import folder_paths
 from folder_paths import add_model_folder_path, get_filename_list, get_folder_paths
 from tqdm import tqdm
-from . import custom_routes
+from .python import custom_routes
 
 
 # Install requirements

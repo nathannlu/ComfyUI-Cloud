@@ -3,7 +3,7 @@ import base64
 import uuid
 import json
 
-file_path = ".comfycloud_profile"
+file_path = "../.comfycloud_profile"
 
 def load_user_profile():
     if os.path.exists(file_path):
