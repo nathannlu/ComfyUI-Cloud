@@ -98,7 +98,7 @@ export class ComfyNode extends LiteGraph.LGraphNode {
    */
   addButton(buttonText, options, callback) {
     //this.addWidget("button", buttonText, "image", callback)
-    var b = new Button("Hello world", '#eeaa00', '#001122')
+    var b = new Button(buttonText, '#eeaa00', '#001122')
     b.onClick = callback 
     this.buttons.push(b)
 
@@ -129,14 +129,14 @@ export class Button {
     this.x = 0;
     this.y = 0;
     this.width = 100;
-    this.height = 48;
+    this.height = 24;
     this.text = text;
     this.color = textColor;
     this.backgroundColor = fillColor;
 
-    this.fontSize = "16";
+    this.fontSize = "12";
     this.fontFamily = "Arial";
-    this.fontWeight = "regular";
+    this.fontWeight = "Bold";
   }
 
   inBounds(mouseX, mouseY) {
@@ -158,12 +158,12 @@ export class Button {
       this.y, 
       this.width, 
       this.height,
-      8
+      4
     );  
     ctx.fill()
 
     // draw the button text
-    ctx.fillStyle = "#fff"//this.color;
+    ctx.fillStyle = this.color;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 

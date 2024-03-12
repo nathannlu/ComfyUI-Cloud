@@ -29,6 +29,24 @@ export class ComfyCloud extends ComfyNode {
     // logo
     this.logo = new Image();
     this.logo.src = URL.createObjectURL(new Blob([cloudIconWhite], { type: 'image/svg+xml' }));
+
+    this.menuButton = this.addButton("Menu", {}, async () => {
+      // Timeout is added as a hotfix.
+      // Without waiting 100ms the node gets
+      // stuck as selected on the user's mouse
+      setTimeout(() => {
+        if(this.properties?.workflow_id?.length > 0) {
+          window.open(`https://comfycloud.vercel.app/workflows/${this.properties.workflow_id}`, '_blank');
+        } else {
+          window.open("https://comfycloud.vercel.app/workflows", '_blank');
+        }
+      }, 100)
+    })
+    this.menuButton.x = 4 
+    this.menuButton.y = 52
+    this.menuButton.color = "#1D4AFF"
+    this.menuButton.backgroundColor = "#fff";
+
   }
 
   drawLogo(ctx) {
