@@ -7,11 +7,9 @@ import {
   createRun
 } from "../client.js"
 import { 
-  getData, 
   createMetaNode, 
   getApiToken, 
   validatePrompt, 
-  getWorkflowId, 
   compareWorkflows, 
   isWorkflowUpToDate
 } from "../utils.js"
@@ -19,7 +17,6 @@ import {
   app,
 } from '../comfy/comfy.js'; 
 import { 
-  configDialog, 
   infoDialog,
 } from '../comfy/ui.js'; 
 import { 
@@ -28,12 +25,12 @@ import {
   setMessage,
 } from './ui.js'; 
 import { logger } from '../logger.js';
+import { authDialog } from '../node/auth.ui.js';
 
 
 export async function onGeneration() {
   logger.newLog();
   try {
-    const { endpoint } = getData();
     setButtonDefault()
 
     // check auth
@@ -42,7 +39,8 @@ export async function onGeneration() {
 
     if(!doesApiTokenExist) {
       // Request auth
-      configDialog.show();
+      setButtonDefault()
+      return authDialog.show();
     }
 
     // check if ComfyCloud meta node exists
@@ -79,11 +77,9 @@ export async function onGeneration() {
         await pollSyncDependencies(s.taskId)
       }
 
-      if(s?.nodesToUpload) {
-        setMessage("Building environment...");
-      }
+      setMessage("Updating workflow...");
 
-      await uploadLocalWorkflow()
+      await uploadLocalWorkflow(s)
     }
 
     // @todo patch workflow inputs
@@ -92,11 +88,10 @@ export async function onGeneration() {
     // and workflow api is synced to the cloud
     
     // create run
-    const workflow_id = getWorkflowId()
     await createRun()
     infoDialog.showMessage(
       "Item queued!",
-      `View your generation results at this URL: ${endpoint}/workflows/${workflow_id}`,
+      "You can view your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
     )
   } catch (e) {
     // handle error

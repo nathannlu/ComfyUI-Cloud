@@ -240,9 +240,17 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
 async def upload_dependencies(request):
     # Make a request to localhost
     try:
+        authorization = request.headers.get('Authorization')
         json_data = await request.json()
+
         endpoint = json_data["endpoint"]
         workflow_id = json_data["workflow_id"]
+
+        headers = None
+        if authorization:
+            headers = {
+                "Authorization": authorization
+            }
 
         models_dep = json_data["modelsToUpload"]
         nodes_dep = json_data["nodesToUpload"]
@@ -253,8 +261,10 @@ async def upload_dependencies(request):
             "token": current_datetime.strftime("%Y-%m-%d %H:%M:%S")
         }
 
-        url = f"{endpoint}/api/e"
-        response = make_post_request_with_retry(url, data=body)
+
+        url = f"{endpoint}/e"
+        response = make_post_request_with_retry(url, data=body, headers=headers)
+
 
         # Check if the request was successful (status code 200)
         if response.status_code == 200:

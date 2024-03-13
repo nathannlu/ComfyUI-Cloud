@@ -11,5 +11,13 @@ export const cloudIconWhite = `
 `
 
 
-
-
+export const headerHtml = `
+  <div style="display: flex; align-items: center; margin-bottom: 8px;">
+    <div style="padding-right: 8px">
+    ${cloudIcon}
+    </div>
+    <h1 style="margin: 0; color: white;">
+      Comfy Cloud
+    </h1>
+  </div>
+`

@@ -13,6 +13,7 @@ import {
 class Logger {
   constructor() {
     this.currentLogs = {}
+    this.newLog()
   }
 
   newLog() {

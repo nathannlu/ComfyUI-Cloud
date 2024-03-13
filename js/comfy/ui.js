@@ -1,5 +1,5 @@
 import { ComfyDialog, $el } from './comfy.js';
-import { getData, saveData } from '../utils.js';
+import { getData, setData } from '../store.js';
 
 export class InfoDialog extends ComfyDialog {
   constructor() {
@@ -33,7 +33,7 @@ export class InfoDialog extends ComfyDialog {
       this.textElement.replaceChildren(html);
     }
     this.element.style.display = "flex";
-    this.element.style.zIndex = 1001;
+    this.element.style.zIndex = 1002;
   }
 
   showMessage(title, message) {
@@ -281,7 +281,7 @@ export class ConfigDialog extends ComfyDialog {
     //localStorage.setItem("comfy_cloud_env", deployOption);
 
     const endpoint = this.endpoint
-    saveData({
+    setData({
       endpoint,
       apiKey: api_key,
       displayName,

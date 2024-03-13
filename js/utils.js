@@ -1,7 +1,7 @@
 import _ from 'https://cdn.jsdelivr.net/npm/@esm-bundle/lodash@4.17.21/+esm'
 import { app } from './comfy/comfy.js';
 import { inputDialog } from './comfy/ui.js';
-import { endpoint } from './constants.js';
+import { getData } from './store.js';
 
 /**
  * HELPERS
@@ -18,35 +18,6 @@ export function generateUUID() {
   return uuid;
 }
 
-/**
- * Retrieves deployment data from local storage or defaults.
- * @param {string} [environment] - The environment to get the data for.
- * @returns {{endpoint: string, apiKey: string, displayName: string, environment?: string}} The deployment data.
- */
-
-export function getData() {
-  const deployOption = 'cloud';
-  const data = localStorage.getItem("comfy_cloud_env_data_" + deployOption);
-
-  if (!data) {
-    return {
-      endpoint: endpoint,
-      apiKey: "",
-    };
-  }
-  return {
-    ...JSON.parse(data),
-    endpoint: endpoint,
-    environment: deployOption,
-  };
-}
-
-export function saveData(data) {
-  localStorage.setItem(
-    "comfy_cloud_env_data_" + data.environment,
-    JSON.stringify(data),
-  );
-}
 
 export const createMetaNode = async () => {
   const text = await inputDialog.input(
@@ -102,6 +73,7 @@ export const getWorkflowId = () => {
   // @todo 
   // handle no deployMetaNode
 
+  console.log(deployMetaNode)
   const { workflow_id } = deployMetaNode.properties;
   //const workflow_id = deployMetaNode.widgets[1].value;
   return workflow_id;

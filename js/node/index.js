@@ -1,5 +1,7 @@
 import { ComfyNode } from '../comfy/comfy.js';
 import { cloudIconWhite } from '../ui.js';
+import { workflowTableDialog } from './workflows.ui.js';
+
 
 export class ComfyCloud extends ComfyNode {
   color = LGraphCanvas.node_colors.blue.color;
@@ -31,9 +33,13 @@ export class ComfyCloud extends ComfyNode {
     this.logo.src = URL.createObjectURL(new Blob([cloudIconWhite], { type: 'image/svg+xml' }));
 
     this.menuButton = this.addButton("Menu", {}, async () => {
+      //authDialog.show()
+      workflowTableDialog.show()
+
       // Timeout is added as a hotfix.
       // Without waiting 100ms the node gets
       // stuck as selected on the user's mouse
+      /*
       setTimeout(() => {
         if(this.properties?.workflow_id?.length > 0) {
           window.open(`https://comfycloud.vercel.app/workflows/${this.properties.workflow_id}`, '_blank');
@@ -41,6 +47,7 @@ export class ComfyCloud extends ComfyNode {
           window.open("https://comfycloud.vercel.app/workflows", '_blank');
         }
       }, 100)
+      */
     })
     this.menuButton.x = 4 
     this.menuButton.y = 52

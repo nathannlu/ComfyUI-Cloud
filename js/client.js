@@ -1,10 +1,8 @@
+import { setData, getData } from './store.js';
 import { 
-  getData, 
   getUser, 
   getWorkflowId, 
-  getVersion, 
   setWorkflowId,
-  setVersion,
   getWorkflowName,
   getCustomNodesList, 
   isCustomNode,
@@ -14,18 +12,69 @@ import { app } from './comfy/comfy.js';
 import retry from "https://esm.sh/gh/vercel/async-retry";
 import { endpoint } from './constants.js';
 
+export const loginUser = async ({ email, password }) => {
+  const apiRoute = endpoint + "/auth/login";
+  const body = {
+    email: email,
+    password: password,
+  }
+  const res = await fetch(apiRoute, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+  const data = await res.json()
+
+  // @todo - save api token
+  if(res.status == 200 && data) {
+    setData({
+      apiKey: data.token,
+      user: data.user
+    })
+  }
+
+  return { ...data, status: res.status };
+}
+
+export const registerUser = async ({ email, password }) => {
+  const apiRoute = endpoint + "/auth/register";
+  const body = {
+    email: email,
+    password: password,
+  }
+  const res = await fetch(apiRoute, {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  })
+
+  const data = await res.json()
+
+  if(res.status == 200 && data) {
+    setData({
+      apiKey: data.token,
+      user: data.user
+    })
+  }
+
+  return { ...data, status: res.status };
+}
+
 /**
  * Calls endpoints from ComfyCloud API
  *
  *
  */
-
 const fetchRetry = async (url, options = {}, retries) => {
   return await retry(
     async bail => {
       logger.info("fetchRetry: sending request...")
       const res = await fetch(url, options);
-      if (res.status !== 200) {
+      if (res.status !== 200 && res.status !== 201) {
         bail(new Error("Server error"));
         return;
       }
@@ -44,21 +93,16 @@ const fetchRetry = async (url, options = {}, retries) => {
 export const getCloudWorkflow = async () => {
   logger.info("Retrieving existing workflow from cloud")
   try {
-    const { endpoint, apiKey } = getData();
+    const { apiKey } = getData();
     const workflow_id = getWorkflowId();
 
-    const body = {
-      version: parseInt(getVersion()),
-    }
-    const existing_workflow = await fetchRetry(endpoint + "/api/workflow/" + workflow_id, {
-      method: "POST",
-      body: JSON.stringify(body),
+    const existing_workflow = await fetchRetry(endpoint + "/workflow/" + workflow_id, {
+      method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: "Bearer " + apiKey,
       },
     }, 2)
-
     logger.info("Successfully retrieved workflow")
 
     return existing_workflow;
@@ -69,22 +113,48 @@ export const getCloudWorkflow = async () => {
   }
 }
 
+
+export const getWorkflowRunOutput = async (run_id) => {
+  logger.info("Retrieving existing workflow from cloud")
+  try {
+    const { apiKey } = getData();
+    const workflow_id = getWorkflowId();
+
+    const output = await fetchRetry(endpoint + "/workflow/" + workflow_id + "/runs/" + run_id, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    }, 2)
+    logger.info("Successfully retrieved workflow output")
+
+    return output;
+  } catch(e) {
+    logger.error("Failed to retrieve workflow output", e)
+
+    throw new Error("Failed to retrieve workflow output")
+  }
+}
+
 /**
  * Sends data to createRun api endpoint
  */
 export const createRun = async () => {
   logger.info("Creating run workflow request")
   try {
-    const { endpoint, apiKey } = getData();
+    const { apiKey } = getData();
     const user = await getUser();
+    const workflow_id = getWorkflowId()
 
-    const apiRoute = endpoint + "/api/run";
+    const apiRoute = endpoint + "/workflow/" + workflow_id + "/runs";
     const body = {
-      workflow_id: getWorkflowId(),
-      version: getVersion(),
+      workflow_id,
+      //version: getVersion(),
       user_id: user?.id,
       inputs: {},
     }
+
     await fetch(apiRoute, {
       method: "POST",
       body: JSON.stringify(body),
@@ -106,7 +176,9 @@ export const createRun = async () => {
 export const createEmptyWorkflow = async () => {
   logger.info("Uploading local workflow to cloud")
   try {
-    const { endpoint, apiKey } = getData();
+    const { apiKey } = getData();
+    const apiRoute = endpoint + "/workflow";
+    /*
     const apiRoute = endpoint + "/api/workflow";
 
     const body = {
@@ -120,7 +192,11 @@ export const createEmptyWorkflow = async () => {
         file_custom_nodes: [],
       },
     };
+    */
     //let data = { status: 200 }
+    const body = {
+      name: getWorkflowName(),
+    }
     let data = await fetchRetry(apiRoute, {
       method: "POST",
       body: JSON.stringify(body),
@@ -130,8 +206,8 @@ export const createEmptyWorkflow = async () => {
       },
     }, 2);
 
-    setWorkflowId(data.workflow_id)
-    setVersion(data.version)
+    setWorkflowId(data.id)
+    //setVersion(data.version)
 
     logger.info("Successfully uploaded local workflow to cloud")
   } catch (e) {
@@ -148,27 +224,23 @@ export const createEmptyWorkflow = async () => {
 /**
  * Sends local workflow to the cloud to be stored
  */
-export const uploadLocalWorkflow = async () => {
+export const uploadLocalWorkflow = async (dependencies) => {
   logger.info("Uploading local workflow to cloud")
   try {
-    const { endpoint, apiKey } = getData();
-    const apiRoute = endpoint + "/api/workflow";
+    const { apiKey } = getData();
+    const workflow_id = getWorkflowId()
+    const apiRoute = endpoint + "/workflow/" + workflow_id;
     const prompt = await app.graphToPrompt();
 
     const body = {
-      workflow_name: getWorkflowName(),
-      workflow_id: getWorkflowId(),
+      name: getWorkflowName(),
       workflow: prompt.workflow,
       workflow_api: prompt.output,
-      snapshot: {
-        comfyui: "",
-        git_custom_nodes: {},
-        file_custom_nodes: [],
-      },
+      dependencies: dependencies,
     };
     //let data = { status: 200 }
     let data = await fetchRetry(apiRoute, {
-      method: "POST",
+      method: "PUT",
       body: JSON.stringify(body),
       headers: {
         "Content-Type": "application/json",
@@ -176,8 +248,8 @@ export const uploadLocalWorkflow = async () => {
       },
     }, 2);
 
-    setWorkflowId(data.workflow_id)
-    setVersion(data.version)
+    setWorkflowId(data.id)
+    //setVersion(data.version)
 
     logger.info("Successfully uploaded local workflow to cloud")
   } catch (e) {
@@ -196,7 +268,7 @@ export const syncDependencies = async (diff) => {
   try {
     // update with new workflow
     const workflow_id = getWorkflowId()
-    const { endpoint } = getData();
+    const { apiKey } = getData();
 
     if(!diff) {
       return {}
@@ -277,6 +349,10 @@ export const syncDependencies = async (diff) => {
       const res = await fetch("/comfy-cloud/upload", {
         method: "POST",
         body: JSON.stringify(body),
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + apiKey,
+        },
       })
 
       if(res.status == 200) {
