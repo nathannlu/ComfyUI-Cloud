@@ -4,9 +4,13 @@ import { workflowTableDialog } from './workflows.ui.js';
 
 
 export class ComfyCloud extends ComfyNode {
-  color = LGraphCanvas.node_colors.blue.color;
-  bgcolor = LGraphCanvas.node_colors.blue.bgcolor;
-  groupcolor = LGraphCanvas.node_colors.blue.groupcolor;
+  color = "#fff" //LGraphCanvas.node_colors.blue.color;
+  bgcolor = "#fff" //LGraphCanvas.node_colors.blue.bgcolor;
+  groupcolor = "#1D4AFF"// LGraphCanvas.node_colors.blue.groupcolor;
+
+  //boxcolor = "#asd"
+  boxcolor="#1D4AFF"
+
   constructor() {
     super()
     if (!this.properties) {
@@ -33,41 +37,39 @@ export class ComfyCloud extends ComfyNode {
     this.logo.src = URL.createObjectURL(new Blob([cloudIconWhite], { type: 'image/svg+xml' }));
 
     this.menuButton = this.addButton("Menu", {}, async () => {
-      //authDialog.show()
       workflowTableDialog.show()
-
-      // Timeout is added as a hotfix.
-      // Without waiting 100ms the node gets
-      // stuck as selected on the user's mouse
-      /*
-      setTimeout(() => {
-        if(this.properties?.workflow_id?.length > 0) {
-          window.open(`https://comfycloud.vercel.app/workflows/${this.properties.workflow_id}`, '_blank');
-        } else {
-          window.open("https://comfycloud.vercel.app/workflows", '_blank');
-        }
-      }, 100)
-      */
     })
-    this.menuButton.x = 4 
-    this.menuButton.y = 52
-    this.menuButton.color = "#1D4AFF"
-    this.menuButton.backgroundColor = "#fff";
+    this.menuButton.x = 8 
+    this.menuButton.y = this.size[1] - 24 - 8
+    this.menuButton.color = "#fff"
+    this.menuButton.backgroundColor = "#1D4AFF";
 
   }
 
   drawLogo(ctx) {
-    ctx.drawImage(this.logo, 8, 8); // Adjust the position as needed
+    ctx.drawImage(this.logo, 16, -11); // Adjust the position as needed
   }
 
   gradient(context) {
+    let paddingX = 4
+    let paddingY = -10 
     let time = this.time;
     let x = this.x;
     let y = this.y;
 
     const color = function (x, y, r, g, b) {
       context.fillStyle = `rgb(${r}, ${g}, ${b})`
-      context.fillRect(x, y, 10, 10);
+      context.beginPath();
+      //context.fillRect(x + padding, y + padding, 10, 10);
+      context.roundRect(
+        x+paddingX, 
+        y+paddingY, 
+        10, 
+        10,
+        4
+      );  
+      context.fill()
+
     }
     const R = function (x, y, time) {
       return (Math.floor(192 + 64 * Math.cos((x * x - y * y) / 300 + time)));
@@ -82,8 +84,8 @@ export class ComfyCloud extends ComfyNode {
     }
 
     const startAnimation = () => {
-      for (x = 0; x <= 30; x++) {
-        for (y = 0; y <= 30; y++) {
+      for (x = paddingX; x <= 30 + paddingX; x++) {
+        for (y = paddingY; y <= 30 + paddingY; y++) {
           color(x, y, R(x, y, time), G(x, y, time), B(x, y, time));
         }
       }
@@ -100,19 +102,34 @@ export class ComfyCloud extends ComfyNode {
       workflow_name
     } = this.properties;
 
+    const [width] = this.size;
+
+    // erase original UI
+    ctx.fillStyle = "white"
+    ctx.fillRect(0,-22, width+1, 50 )
+
+
+
     if (workflow_name) {
       this.gradient(ctx)
       this.drawLogo(ctx)
+
+
+      /*
+      ctx.fillStyle = "green"
+      ctx.font = "12px Arial";
+      ctx.fillText("Comfy Cloud", 60, -10)
+      */
 
       ctx.fillStyle = "white"
 
       ctx.fillStyle = "#9999AA"
       ctx.font = "12px Arial";
-      ctx.fillText("Workflow name", 50, 15)
+      ctx.fillText("Workflow name", 60, 20)
 
-      ctx.fillStyle = "white"
+      ctx.fillStyle = "black"
       ctx.font = "bold 16px Arial";
-      ctx.fillText(workflow_name, 50, 35)
+      ctx.fillText(workflow_name, 60, 40)
 
     } else {
       ctx.fillStyle = "white"
