@@ -54,7 +54,7 @@ export const registerUser = async ({ email, password }) => {
 
   const data = await res.json()
 
-  if(res.status == 200 && data) {
+  if(res.status == 201 && data) {
     setData({
       apiKey: data.token,
       user: data.user
@@ -63,6 +63,9 @@ export const registerUser = async ({ email, password }) => {
 
   return { ...data, status: res.status };
 }
+
+
+
 
 /**
  * Calls endpoints from ComfyCloud API
@@ -136,6 +139,28 @@ export const getWorkflowRunOutput = async (run_id) => {
     throw new Error("Failed to retrieve workflow output")
   }
 }
+
+export const stopRunningTask = async (run_id) => {
+  logger.info("Retrieving existing workflow from cloud")
+  try {
+    const { apiKey } = getData();
+    const workflow_id = getWorkflowId();
+
+    await fetch(endpoint + "/workflow/" + workflow_id + "/runs/" + run_id + "/cancel", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    })
+
+    logger.info("Successfully retrieved workflow output")
+  } catch(e) {
+    logger.error("Failed to retrieve workflow output", e)
+    throw new Error("Failed to retrieve workflow output")
+  }
+}
+
 
 /**
  * Sends data to createRun api endpoint

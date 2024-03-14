@@ -1,6 +1,11 @@
 import { headerHtml } from '../ui.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
-import { getCloudWorkflow, getWorkflowRunOutput } from '../client.js';
+import { infoDialog } from '../comfy/ui.js';
+import { 
+  getCloudWorkflow, 
+  getWorkflowRunOutput, 
+  stopRunningTask
+} from '../client.js';
 
 class WorkflowTableDialog extends ComfyDialog {
   container = null;
@@ -56,6 +61,27 @@ class WorkflowTableDialog extends ComfyDialog {
       await this.showWorkflowsTable()
     };
 
+    const terminate = this.container.querySelector("#terminate-button");
+    terminate.onclick = async () => {
+      try {
+        await stopRunningTask(id)
+        infoDialog.show();
+        infoDialog.showMessage(
+          "Successfully terminated",
+          "You will only be billed for the time your workflow was running.",
+        );
+        this.close()
+      } catch(e) {
+        infoDialog.show();
+        infoDialog.showMessage(
+          "Error",
+          `Something went wrong: ${e}`,
+        );
+        this.close()
+      }
+    };
+
+
     this.element.style.display = "flex";
     this.element.style.zIndex = 1001;
   }
@@ -90,6 +116,7 @@ const workflowDetailsHtml = (rowDetails) => {
   return`
     <div style="padding: 20px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
       <h2>Row Details</h2>
+      ${rowDetails.status === 'not-started' || rowDetails.status === 'running' ? `<button id="terminate-button">Stop workflow execution</button>` : "" }
       <p><strong>Status:</strong> <span style="color: ${rowDetails.status === 'success' ? '#4CAF50' : '#FFC107'};">${rowDetails.status}</span></p>
       ${generateOutputs(rowDetails.outputs)}
       <button id="back-button">Back</button>
