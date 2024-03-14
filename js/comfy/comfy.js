@@ -129,12 +129,12 @@ export class Button {
     this.x = 0;
     this.y = 0;
     this.width = 100;
-    this.height = 24;
+    this.height = 28;
     this.text = text;
     this.color = textColor;
     this.backgroundColor = fillColor;
 
-    this.fontSize = "12";
+    this.fontSize = "10";
     this.fontFamily = "Arial";
     this.fontWeight = "Bold";
   }

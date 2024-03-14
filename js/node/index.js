@@ -1,5 +1,5 @@
 import { ComfyNode } from '../comfy/comfy.js';
-import { cloudIconWhite } from '../ui.js';
+import { cloudIconSmall } from '../ui.js';
 import { workflowTableDialog } from './workflows.ui.js';
 
 
@@ -34,25 +34,28 @@ export class ComfyCloud extends ComfyNode {
 
     // logo
     this.logo = new Image();
-    this.logo.src = URL.createObjectURL(new Blob([cloudIconWhite], { type: 'image/svg+xml' }));
+    this.logo.src = URL.createObjectURL(new Blob([cloudIconSmall], { type: 'image/svg+xml' }));
 
-    this.menuButton = this.addButton("Menu", {}, async () => {
+    this.menuButton = this.addButton("View past runs", {}, async () => {
       workflowTableDialog.show()
     })
     this.menuButton.x = 8 
-    this.menuButton.y = this.size[1] - 24 - 8
+    this.menuButton.y = this.size[1] - 28 - 8
     this.menuButton.color = "#fff"
     this.menuButton.backgroundColor = "#1D4AFF";
-
+    //this.menuButton.fontSize = "10px";
   }
 
   drawLogo(ctx) {
-    ctx.drawImage(this.logo, 16, -11); // Adjust the position as needed
+    ctx.drawImage(this.logo, 9, -21); // Adjust the position as needed
+    ctx.fillStyle = "#1D4AFF"
+    ctx.font = "bold 12px Arial";
+    ctx.fillText("Comfy Cloud", 32, -8)
   }
 
   gradient(context) {
     let paddingX = 4
-    let paddingY = -10 
+    let paddingY = 4
     let time = this.time;
     let x = this.x;
     let y = this.y;
@@ -69,7 +72,6 @@ export class ComfyCloud extends ComfyNode {
         4
       );  
       context.fill()
-
     }
     const R = function (x, y, time) {
       return (Math.floor(192 + 64 * Math.cos((x * x - y * y) / 300 + time)));
@@ -96,6 +98,7 @@ export class ComfyCloud extends ComfyNode {
     startAnimation();
   }
 
+
   render(ctx) {
     const { 
       //workflow_id, 
@@ -108,23 +111,16 @@ export class ComfyCloud extends ComfyNode {
     ctx.fillStyle = "white"
     ctx.fillRect(0,-22, width+1, 50 )
 
+    this.drawLogo(ctx)
 
 
     if (workflow_name) {
       this.gradient(ctx)
-      this.drawLogo(ctx)
-
-
-      /*
-      ctx.fillStyle = "green"
-      ctx.font = "12px Arial";
-      ctx.fillText("Comfy Cloud", 60, -10)
-      */
 
       ctx.fillStyle = "white"
 
       ctx.fillStyle = "#9999AA"
-      ctx.font = "12px Arial";
+      ctx.font = "10px Arial";
       ctx.fillText("Workflow name", 60, 20)
 
       ctx.fillStyle = "black"
@@ -132,6 +128,7 @@ export class ComfyCloud extends ComfyNode {
       ctx.fillText(workflow_name, 60, 40)
 
     } else {
+      this.buttons = [];
       ctx.fillStyle = "white"
       ctx.font = "bold 16px Arial";
       ctx.fillText("Do not manually create this node", 10, 20)
