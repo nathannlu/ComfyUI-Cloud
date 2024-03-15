@@ -1,11 +1,13 @@
-import { headerHtml } from '../ui.js';
+import { headerHtml, loadingIcon } from '../ui.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
 import { infoDialog } from '../comfy/ui.js';
 import { 
   getCloudWorkflow, 
   getWorkflowRunOutput, 
-  stopRunningTask
+  stopRunningTask,
+  pollWorkflowRun
 } from '../client.js';
+
 
 class WorkflowTableDialog extends ComfyDialog {
   container = null;
@@ -26,6 +28,8 @@ class WorkflowTableDialog extends ComfyDialog {
     this.header.innerHTML = headerHtml
     this.element.querySelector(".comfy-modal-content").prepend(this.container);
     this.element.querySelector(".comfy-modal-content").prepend(this.header);
+
+    this.poll = null;
   }
 
   createButtons() {
@@ -52,38 +56,93 @@ class WorkflowTableDialog extends ComfyDialog {
   }
 
   async showWorkflowDetails(id) {
-    const data = await getWorkflowRunOutput(id)
-
-    this.container.innerHTML = workflowDetailsHtml(data);
-
+    this.container.innerHTML = workflowDetailsHtml();
+    const progressBar = this.container.querySelector("#comfycloud-progress-bar")
+    const statusContainer = this.container.querySelector("#comfycloud-status-container")
     const link = this.container.querySelector("#back-button");
-    link.onclick = async () => {
-      await this.showWorkflowsTable()
-    };
-
     const terminate = this.container.querySelector("#terminate-button");
-    terminate.onclick = async () => {
+    const outputBox = this.container.querySelector("#comfycloud-output-box");
+    terminate.onclick = async (e) => {
       try {
+        e.target.innerHTML = loadingIcon;
+        e.target.disabled = true;
+        
         await stopRunningTask(id)
         infoDialog.show();
         infoDialog.showMessage(
           "Successfully terminated",
           "You will only be billed for the time your workflow was running.",
         );
-        this.close()
-      } catch(e) {
+      } catch(error) {
         infoDialog.show();
         infoDialog.showMessage(
           "Error",
           `Something went wrong: ${e}`,
         );
+      } finally {
+        e.target.innerHTML = "Stop workflow execution";
+        e.target.disabled = false;
         this.close()
+        clearInterval(this.poll)
       }
     };
+    
+    // Main polling function
+    const getWorkflowRunData = async () => {
+      try {
+        const { workflowRun, progress } = await pollWorkflowRun(id)
 
+        // Stop polling once its successful
+        // handle terminal states (success, failed, terminated)
+
+        if(workflowRun?.status == "success" || workflowRun?.status == "failed" || workflowRun?.status == "terminated") {
+          terminate.remove();
+          progressBar.remove();
+          this.stopPolling()
+
+          // query output only for failed / succeeded runs
+          if (workflowRun?.status != "terminated") {
+            const data = await getWorkflowRunOutput(id)
+            outputBox.innerHTML = generateOutputs(data)
+          }
+        } else if(workflowRun) {
+          // queue the poll
+
+          if(this.poll == null) {
+            this.poll = setInterval(getWorkflowRunData, 2000);
+          }
+        }
+
+        // update status
+        if (workflowRun?.status) {
+          statusContainer.innerHTML = workflowRun.status
+        }
+
+        // update progress
+        if(progress) {
+          progressBar.innerHTML = progress.value/progress.max * 100
+        }
+
+      } catch(error) {
+        console.error("Error:", error);
+        this.stopPolling()
+      }
+    }
+    getWorkflowRunData()
+
+    // Handle button clicks
+    link.onclick = async () => {
+      await this.showWorkflowsTable()
+      this.stopPolling()
+    };
 
     this.element.style.display = "flex";
     this.element.style.zIndex = 1001;
+  }
+
+  stopPolling() {
+    clearInterval(this.poll)
+    this.poll = null
   }
 
   async showWorkflowsTable() {
@@ -107,22 +166,24 @@ class WorkflowTableDialog extends ComfyDialog {
 export const workflowTableDialog = new WorkflowTableDialog()
 
 
-
-
 // Function to handle row click
-const workflowDetailsHtml = (rowDetails) => {
+const workflowDetailsHtml = () => {
   //const imageData = rowDetails.outputs[0]?.data.images[0].filename;
 
   return`
     <div style="padding: 20px; border: 1px solid #ddd; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
-      <h2>Row Details</h2>
-      ${rowDetails.status === 'not-started' || rowDetails.status === 'running' ? `<button id="terminate-button">Stop workflow execution</button>` : "" }
-      <p><strong>Status:</strong> <span style="color: ${rowDetails.status === 'success' ? '#4CAF50' : '#FFC107'};">${rowDetails.status}</span></p>
-      ${generateOutputs(rowDetails.outputs)}
       <button id="back-button">Back</button>
+      <h2>Row Details</h2>
+      <p><strong>Status:</strong> <span id="comfycloud-status-container"></span></p>
+      <div id="comfycloud-progress-bar">
+      </div>
+      <div id="comfycloud-output-box">
+      </div>
+      <button id="terminate-button">Stop workflow execution</button>
     </div>
   `;
 }
+
 
 const generateOutputs = (outputs) => {
   return outputs?.map((run) => {

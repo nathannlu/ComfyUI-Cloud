@@ -73,7 +73,6 @@ export const getWorkflowId = () => {
   // @todo 
   // handle no deployMetaNode
 
-  console.log(deployMetaNode)
   const { workflow_id } = deployMetaNode.properties;
   //const workflow_id = deployMetaNode.widgets[1].value;
   return workflow_id;

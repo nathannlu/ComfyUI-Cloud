@@ -116,6 +116,31 @@ export const getCloudWorkflow = async () => {
   }
 }
 
+export const pollWorkflowRun = async (run_id) => {
+  try {
+    const { apiKey } = getData();
+    const workflow_id = getWorkflowId();
+
+    const apiRoute = endpoint + "/workflow/" + workflow_id + "/runs/" + run_id
+    const res = await fetch(apiRoute, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + apiKey,
+      },
+    })
+
+    if (res.status !== 200 && res.status !== 201) {
+      throw new Error("Server error")
+    }
+    const data = await res.json()
+    return data;
+  } catch(e) {
+    console.log(e)
+    throw new Error("Failed to retrieve workflow output")
+  }
+}
+
 
 export const getWorkflowRunOutput = async (run_id) => {
   logger.info("Retrieving existing workflow from cloud")
@@ -123,7 +148,7 @@ export const getWorkflowRunOutput = async (run_id) => {
     const { apiKey } = getData();
     const workflow_id = getWorkflowId();
 
-    const output = await fetchRetry(endpoint + "/workflow/" + workflow_id + "/runs/" + run_id, {
+    const output = await fetchRetry(endpoint + "/workflow/" + workflow_id + "/runs/" + run_id + '/outputs', {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -442,35 +467,6 @@ export const pollSyncDependencies = async (taskId) => {
 
   if (status == "Task failed") {
     throw new Error("Failed to upload")
-  }
-}
-
-export const buildVenv = async (custom_nodes) => {
-  logger.info("Starting build venv")
-  try {
-    const workflow_id = getWorkflowId()
-    const url = "https://nathannlu--test-workflow-fastapi-app.modal.run/create"
-    const body = {
-      workflow_id,
-      custom_nodes
-    }
-    const res = await fetch(url, {
-      method: "POST",
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    }).then(x => x.json())
-
-    if(res?.status != "success") {
-      throw new Error("Failed to build env in cloud")
-    }
-    logger.info("Successfully built venv")
-    return res;
-  } catch(e) {
-
-    logger.error("Failed to build env in cloud", e)
-    throw new Error("Failed to build env in cloud")
   }
 }
 
