@@ -9,6 +9,30 @@ import { getData } from './store.js';
  * File for helper functions, local network api's
  */
 
+export function formatTimestamp(timestamp) {
+  const date = new Date(timestamp);
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hour = String(date.getHours()).padStart(2, '0');
+  const minute = String(date.getMinutes()).padStart(2, '0');
+  const second = String(date.getSeconds()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+}
+
+export function formatDuration(seconds) {
+  if (seconds < 60) {
+    return seconds.toFixed(2) + " seconds";
+  } else if (seconds < 3600) {
+    return (seconds / 60).toFixed(2) + " minutes";
+  } else {
+    return (seconds / 3600).toFixed(2) + " hours";
+  }
+}
+
+
 export function generateUUID() {
   let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
     const r = Math.random() * 16 | 0;

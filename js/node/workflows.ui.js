@@ -7,6 +7,7 @@ import {
   stopRunningTask,
   pollWorkflowRun
 } from '../client.js';
+import { formatTimestamp, formatDuration } from '../utils.js';
 
 
 class WorkflowTableDialog extends ComfyDialog {
@@ -246,8 +247,8 @@ function generateRows(data) {
   return data.map((item, i) => `
     <tr class="workflow-row" style="border-bottom: 1px solid #ddd; cursor: pointer;">
       <td style="padding: 12px;">${i+1}</td>
-      <td style="padding: 12px;">${item.created_at}</td>
-      <td style="padding: 12px;">0.0s</td>
+      <td style="padding: 12px;">${formatTimestamp(item.created_at)}</td>
+      <td style="padding: 12px;">${formatDuration(item.duration)}</td>
       <td style="padding: 12px; color: ${item.status === 'success' ? '#4CAF50' : '#FFC107'};">${item.status}</td>
     </tr>
   `).join('');
