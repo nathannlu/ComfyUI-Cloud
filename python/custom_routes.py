@@ -71,6 +71,27 @@ async def comfy_cloud_save_log(request):
         print("Error:", e)
         return web.json_response({ "error": e }, status=400)
 
+
+@server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
+async def validate_input_path(request):
+    try:
+        data = await request.json()
+        input_paths = data.get("paths")
+
+        paths_not_found = []
+        base = folder_paths.base_path
+        for path in input_paths:
+            full_path = os.path.join(base, 'input', path)
+
+            if not os.path.exists(full_path):
+                paths_not_found.append(path)
+
+        return web.json_response({ "invalid_paths": paths_not_found }, status=200)
+    except Exception as e:
+        print("Error:", e)
+        return web.json_response({ "error": e }, status=400)
+
+
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-prompt")
 async def comfy_cloud_validate_prompt(request):
     data = await request.json()

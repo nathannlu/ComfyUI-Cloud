@@ -228,22 +228,7 @@ export const createEmptyWorkflow = async () => {
   try {
     const { apiKey } = getData();
     const apiRoute = endpoint + "/workflow";
-    /*
-    const apiRoute = endpoint + "/api/workflow";
 
-    const body = {
-      workflow_name: getWorkflowName(),
-      workflow_id: getWorkflowId(),
-      workflow: {},
-      workflow_api: {},
-      snapshot: {
-        comfyui: "",
-        git_custom_nodes: {},
-        file_custom_nodes: [],
-      },
-    };
-    */
-    //let data = { status: 200 }
     const body = {
       name: getWorkflowName(),
     }
@@ -261,11 +246,6 @@ export const createEmptyWorkflow = async () => {
 
     logger.info("Successfully uploaded local workflow to cloud")
   } catch (e) {
-    // @todo
-    // Handle potential reasons:
-    // - user has no network connection
-    // - user auth token expired
-    // - server not responsive
     logger.error("Failed to upload workflow API to cloud",e)
     throw new Error("Failed to upload workflow API to cloud")
   }
@@ -274,7 +254,7 @@ export const createEmptyWorkflow = async () => {
 /**
  * Sends local workflow to the cloud to be stored
  */
-export const uploadLocalWorkflow = async (dependencies) => {
+export const uploadLocalWorkflow = async (dependencies, workflow_patch) => {
   logger.info("Uploading local workflow to cloud")
   try {
     const { apiKey } = getData();
@@ -286,6 +266,7 @@ export const uploadLocalWorkflow = async (dependencies) => {
       name: getWorkflowName(),
       workflow: prompt.workflow,
       workflow_api: prompt.output,
+      workflow_patch: workflow_patch,
       dependencies: dependencies,
     };
     //let data = { status: 200 }
@@ -299,7 +280,6 @@ export const uploadLocalWorkflow = async (dependencies) => {
     }, 2);
 
     setWorkflowId(data.id)
-    //setVersion(data.version)
 
     logger.info("Successfully uploaded local workflow to cloud")
   } catch (e) {
@@ -333,7 +313,8 @@ export const syncDependencies = async (diff) => {
     let modelsToUpload = []
     let dependenciesToUpload = []
     let filesToUpload = []
-    let pathChanges = []
+    //let pathChanges = []
+    let patch = {}
     for (const [k, v] of Object.entries(diff)) {
       // Upload necessary images
       if (v?.class_type == 'LoadImage') {
@@ -351,13 +332,17 @@ export const syncDependencies = async (diff) => {
               z.endsWith('.mkv') ||
               z.endsWith('.gif')
             ) {
-              filesToUpload.push(z)
-              pathChanges.push({
-                key: k,
-                node: v,
-                input_property: l,
-                input_value: z,
-              })
+              const filename = extractFilename(z)
+              filesToUpload.push(filename)
+              
+
+              // Patch input for files like VHS node
+              let mendedNode = {
+                ...v,
+              }
+              console.log(mendedNode)
+              mendedNode["inputs"][l] = `/vol/vol/${workflow_id}/comfyui/input/${filename}`
+              patch[k] = mendedNode 
             }
 
             // Handle models, LoRAs, and checkpoints
@@ -388,6 +373,14 @@ export const syncDependencies = async (diff) => {
       }
     }
 
+    // send api req to python server to check if 
+    // it is in input. if not error out and let user
+    // know
+    const invalid = await validateInputPath(filesToUpload)
+    if(invalid.length > 0){
+      throw new Error("Got invalid input paths")
+    }
+
     if(filesToUpload.length > 0 || modelsToUpload.length > 0 || dependenciesToUpload.length > 0) {
       const body = {
         workflow_id,
@@ -410,11 +403,15 @@ export const syncDependencies = async (diff) => {
 
         if (data?.success) {
           logger.info("Successfully synced dependencies")
-          return {
+
+          return { 
             taskId: data?.task_id,
-            modelsToUpload,
-            filesToUpload,
-            nodesToUpload: dependenciesToUpload,
+            dependencies: {
+              modelsToUpload,
+              filesToUpload,
+              nodesToUpload: dependenciesToUpload,
+            },
+            workflow_patch: patch,
           }
         } else {
           logger.error(`Error syncing dependencies. Failed to upload:
@@ -478,12 +475,37 @@ export async function addPing() {
   const userId = user?.id;
 
   if(userId) {
-    const menu = document.querySelector(".comfy-menu");
-    const i = document.createElement('img');
-    i.src = `${endpoint}/api/p?e=${userId}`
-    menu.appendChild(i);
+    await fetch(
+      `${endpoint}/auth?i=${userId}`
+    ).then((x) => x.json())
   }
 }
+
+export async function validateInputPath(paths) {
+  const body = {
+    paths: paths,
+  }
+  const res = await fetch("/comfy-cloud/validate-input-path", {
+    method: "POST",
+    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+    },
+  }).then(x=>x.json());
+
+  console.log("Got invalid", res.invalid_paths)
+  return res.invalid_paths
+}
+
+
+function extractFilename(filepath) {
+    // Split the filepath by '/'
+    const parts = filepath.split('/');
+    // Take the last part which represents the filename
+    const filename = parts[parts.length - 1];
+    return filename;
+}
+
 
 
 

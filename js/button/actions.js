@@ -27,7 +27,6 @@ import {
 import { logger } from '../logger.js';
 import { authDialog } from '../node/auth.ui.js';
 
-
 export async function onGeneration() {
   logger.newLog();
   try {
@@ -72,17 +71,15 @@ export async function onGeneration() {
     // sync workflow
     if(!isWorkflowUpToDate(diffDeps)) {
       setMessage("Syncing dependencies...");
-      const s = await syncDependencies(diffDeps)
-      if(s?.taskId) {
-        await pollSyncDependencies(s.taskId)
+      const { taskId:uploadTaskId, dependencies, workflow_patch } = await syncDependencies(diffDeps)
+      if(uploadTaskId) {
+        await pollSyncDependencies(uploadTaskId)
       }
 
       setMessage("Updating workflow...");
 
-      await uploadLocalWorkflow(s)
+      await uploadLocalWorkflow(dependencies, workflow_patch)
     }
-
-    // @todo patch workflow inputs
 
     // Beyond this point, we assume all dependencies
     // and workflow api is synced to the cloud
@@ -95,9 +92,7 @@ export async function onGeneration() {
     )
   } catch (e) {
     // handle error
-    // @todo - log to error logger
     logger.error("onGeneration error", e)
-
     infoDialog.showMessage("Error", e);
   } finally {
     await logger.saveLog()
