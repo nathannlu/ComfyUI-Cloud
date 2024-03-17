@@ -59,6 +59,7 @@ class WorkflowTableDialog extends ComfyDialog {
   async showWorkflowDetails(id) {
     this.container.innerHTML = workflowDetailsHtml();
     const progressBar = this.container.querySelector("#comfycloud-progress-bar")
+    const estimatedRunningTimeContainer = this.container.querySelector("#comfycloud-estimated-running-time-container")
     const statusContainer = this.container.querySelector("#comfycloud-status-container")
     const link = this.container.querySelector("#back-button");
     const terminate = this.container.querySelector("#terminate-button");
@@ -102,6 +103,10 @@ class WorkflowTableDialog extends ComfyDialog {
         if(workflowRun?.status == "success" || workflowRun?.status == "failed" || workflowRun?.status == "terminated") {
           terminate.remove();
           progressBar.remove();
+          estimatedRunningTimeContainer.remove()
+
+          // @todo - Add a final billed time contianer
+
           this.stopPolling()
 
           // query output only for failed / succeeded runs
@@ -122,6 +127,18 @@ class WorkflowTableDialog extends ComfyDialog {
           statusContainer.innerHTML = workflowRun.status
         }
 
+        // Update elapsed time
+        let elapsedTimeInSeconds
+        if (workflowRun?.started_at) {
+          let startTime = new Date(workflowRun.started_at).getTime(); // Convert start time to milliseconds
+
+          // Current time in milliseconds
+          let currentTime = Date.now(); 
+
+          // Calculate elapsed time in seconds
+          elapsedTimeInSeconds = (currentTime - startTime) / 1000;
+        }
+
         // update progress
         if(progress) {
           progressBar.style.width = `${progress.value/progress.max * 100}%`
@@ -129,7 +146,14 @@ class WorkflowTableDialog extends ComfyDialog {
           progressBar.style.backgroundColor = "#1D4AFF"
           progressBar.style.transition = "all .2s"
 
-          progressBar.innerHTML = `${progress.value/progress.max * 100}%`
+          progressBar.innerHTML = `${progress.value/progress.max * 100}% - ${progress.iterationsPerSecond}/s`
+
+          if(elapsedTimeInSeconds) {
+            const remainingProgress = progress.max - progress.value
+            const remainingProgressInSeconds = (remainingProgress * progress.iterationsPerSecond)
+            const estimatedRunningTime = elapsedTimeInSeconds + remainingProgressInSeconds;
+            estimatedRunningTimeContainer.innerHTML = `${estimatedRunningTime}s`
+          }
         }
 
       } catch(error) {
@@ -184,6 +208,7 @@ const workflowDetailsHtml = () => {
       <button id="back-button">Back</button>
       <h2>Row Details</h2>
       <p><strong>Status:</strong> <span id="comfycloud-status-container"></span></p>
+      <p><strong>Estimated total running time:</strong> <span id="comfycloud-estimated-running-time-container"></span></p>
       <div style="width: 100%;">
         <div id="comfycloud-progress-bar"></div>
       </div>
