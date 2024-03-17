@@ -91,7 +91,10 @@ class WorkflowTableDialog extends ComfyDialog {
     // Main polling function
     const getWorkflowRunData = async () => {
       try {
-        const { workflowRun, progress } = await pollWorkflowRun(id)
+        const { 
+          workflowRun, 
+          progress
+        } = await pollWorkflowRun(id)
 
         // Stop polling once its successful
         // handle terminal states (success, failed, terminated)
@@ -121,7 +124,12 @@ class WorkflowTableDialog extends ComfyDialog {
 
         // update progress
         if(progress) {
-          progressBar.innerHTML = progress.value/progress.max * 100
+          progressBar.style.width = `${progress.value/progress.max * 100}%`
+          progressBar.style.height = "24px"
+          progressBar.style.backgroundColor = "#1D4AFF"
+          progressBar.style.transition = "all .2s"
+
+          progressBar.innerHTML = `${progress.value/progress.max * 100}%`
         }
 
       } catch(error) {
@@ -176,7 +184,8 @@ const workflowDetailsHtml = () => {
       <button id="back-button">Back</button>
       <h2>Row Details</h2>
       <p><strong>Status:</strong> <span id="comfycloud-status-container"></span></p>
-      <div id="comfycloud-progress-bar">
+      <div style="width: 100%;">
+        <div id="comfycloud-progress-bar"></div>
       </div>
       <div id="comfycloud-output-box">
       </div>
