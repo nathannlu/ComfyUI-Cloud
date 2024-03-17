@@ -197,10 +197,7 @@ const generateOutputs = (outputs) => {
         <TableRow key={run.id}>
           <TableCell>Output</TableCell>
           <TableCell className="">
-            <CodeBlock
-              code={JSON.stringify(run.data, null, 2)}
-              lang="json"
-            />
+            ${JSON.stringify(run.data, null, 2)}
           </TableCell>
         </TableRow>
       `;
