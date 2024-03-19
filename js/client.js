@@ -481,6 +481,21 @@ export async function addPing() {
   }
 }
 
+export async function createComfyNode() {
+  const { user } = await fetch(
+    '/comfy-cloud/user',
+  ).then((x) => x.json())
+
+  const userId = user?.id;
+  const workflow_id = getWorkflowId();
+
+  if(userId) {
+    await fetch(
+      `${endpoint}/auth/v?i=${userId}&w=${workflow_id}`
+    ).then((x) => x.json())
+  }
+}
+
 export async function validateInputPath(paths) {
   const body = {
     paths: paths,

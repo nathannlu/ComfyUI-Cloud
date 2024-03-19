@@ -1,14 +1,12 @@
 import { ComfyNode } from '../comfy/comfy.js';
 import { cloudIconSmall } from '../ui.js';
+import { createComfyNode } from '../client.js';
 import { workflowTableDialog } from './workflows.ui.js';
 
-
 export class ComfyCloud extends ComfyNode {
-  color = "#fff" //LGraphCanvas.node_colors.blue.color;
-  bgcolor = "#fff" //LGraphCanvas.node_colors.blue.bgcolor;
-  groupcolor = "#1D4AFF"// LGraphCanvas.node_colors.blue.groupcolor;
-
-  //boxcolor = "#asd"
+  color = "#fff" 
+  bgcolor = "#fff" 
+  groupcolor = "#1D4AFF"
   boxcolor="#1D4AFF"
 
   constructor() {
@@ -46,8 +44,12 @@ export class ComfyCloud extends ComfyNode {
     //this.menuButton.fontSize = "10px";
   }
 
+  onAdded() {
+    createComfyNode()
+  }
+
   drawLogo(ctx) {
-    ctx.drawImage(this.logo, 9, -21); // Adjust the position as needed
+    ctx.drawImage(this.logo, 9, -21);
     ctx.fillStyle = "#1D4AFF"
     ctx.font = "bold 12px Arial";
     ctx.fillText("Comfy Cloud", 32, -8)
@@ -92,7 +94,6 @@ export class ComfyCloud extends ComfyNode {
         }
       }
       this.time = this.time + 0.03;
-      //requestAnimationFrame(startAnimation);
     }
 
     startAnimation();
