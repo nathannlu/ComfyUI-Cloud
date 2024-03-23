@@ -1,11 +1,6 @@
 import { headerHtml, loadingIcon } from '../ui.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
 import { infoDialog } from '../comfy/ui.js';
-import { 
-  getWorkflowRunOutput, 
-  stopRunningTask,
-  pollWorkflowRun
-} from '../client.js';
 import { formatTimestamp, formatDuration } from '../utils.js';
 import { nimbus } from '../resource/index.js';
 
@@ -69,7 +64,8 @@ class WorkflowTableDialog extends ComfyDialog {
         e.target.innerHTML = loadingIcon;
         e.target.disabled = true;
         
-        await stopRunningTask(id)
+        await nimbus.workflowRun.cancel(id)
+
         infoDialog.show();
         infoDialog.showMessage(
           "Successfully terminated",
@@ -95,7 +91,7 @@ class WorkflowTableDialog extends ComfyDialog {
         const { 
           workflowRun, 
           progress
-        } = await pollWorkflowRun(id)
+        } = await nimbus.workflowRun.pollRun(id)
 
         // Stop polling once its successful
         // handle terminal states (success, failed, terminated)
@@ -111,7 +107,8 @@ class WorkflowTableDialog extends ComfyDialog {
 
           // query output only for failed / succeeded runs
           if (workflowRun?.status != "terminated") {
-            const data = await getWorkflowRunOutput(id)
+            //const data = await getWorkflowRunOutput(id)
+            const data = await nimbus.workflowRun.retrieveOutput(id)
             outputBox.innerHTML = generateOutputs(data.outputs)
           }
         } else if(workflowRun) {
