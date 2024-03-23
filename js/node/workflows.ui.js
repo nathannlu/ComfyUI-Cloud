@@ -112,7 +112,7 @@ class WorkflowTableDialog extends ComfyDialog {
           // query output only for failed / succeeded runs
           if (workflowRun?.status != "terminated") {
             const data = await getWorkflowRunOutput(id)
-            outputBox.innerHTML = generateOutputs(data)
+            outputBox.innerHTML = generateOutputs(data.outputs)
           }
         } else if(workflowRun) {
           // queue the poll
