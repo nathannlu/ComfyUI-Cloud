@@ -2,12 +2,12 @@ import { headerHtml, loadingIcon } from '../ui.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
 import { infoDialog } from '../comfy/ui.js';
 import { 
-  getCloudWorkflow, 
   getWorkflowRunOutput, 
   stopRunningTask,
   pollWorkflowRun
 } from '../client.js';
 import { formatTimestamp, formatDuration } from '../utils.js';
+import { nimbus } from '../resource/index.js';
 
 
 class WorkflowTableDialog extends ComfyDialog {
@@ -180,7 +180,9 @@ class WorkflowTableDialog extends ComfyDialog {
 
   async showWorkflowsTable() {
     // @todo - call api to set data
-    const workflow = await getCloudWorkflow()
+    //const workflow = await getCloudWorkflow()
+    const workflow = await nimbus.workflow.retrieve()
+
     this.runs = workflow.runs || [];
 
     this.container.innerHTML = tableHtml(this.runs);

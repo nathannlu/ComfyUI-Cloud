@@ -1,13 +1,11 @@
 import { 
-  uploadLocalWorkflow, 
   syncDependencies, 
   pollSyncDependencies, 
-  getCloudWorkflow, 
-  createEmptyWorkflow,
-  createRun
 } from "../client.js"
 import { 
   createMetaNode, 
+  getWorkflowName,
+  setWorkflowId,
   getApiToken, 
   validatePrompt, 
   compareWorkflows, 
@@ -26,6 +24,8 @@ import {
 } from './ui.js'; 
 import { logger } from '../logger.js';
 import { authDialog } from '../node/auth.ui.js';
+
+import { nimbus } from '../resource/index.js';
 
 export async function onGeneration() {
   logger.newLog();
@@ -58,13 +58,18 @@ export async function onGeneration() {
     if(isNewWorkflow) {
       // Wait for user to input workflow name
       await createMetaNode();
-      await createEmptyWorkflow()
+      //await createEmptyWorkflow()
+      const newWorkflow = await nimbus.workflow.create({ 
+        name: getWorkflowName(),
+      })
+      setWorkflowId(newWorkflow.id)
+
 
       setMessage("Creating new workflow. This may take awhile");
     }
 
     // compare workflow
-    const existing_workflow = await getCloudWorkflow() 
+    const existing_workflow = await nimbus.workflow.retrieve()
 
     const diffDeps = compareWorkflows(localWorkflow.output, existing_workflow.workflow_api);
 
@@ -78,14 +83,21 @@ export async function onGeneration() {
 
       setMessage("Updating workflow...");
 
-      await uploadLocalWorkflow(dependencies, workflow_patch)
+      await nimbus.workflow.update({
+        workflow: localWorkflow.workflow,
+        workflow_api: localWorkflow.output,
+        workflow_patch: workflow_patch,
+        dependencies: dependencies,
+      })
     }
 
     // Beyond this point, we assume all dependencies
     // and workflow api is synced to the cloud
     
     // create run
-    await createRun()
+    //await createRun()
+    await nimbus.workflowRun.create()
+
     infoDialog.showMessage(
       "Item queued!",
       "You can view your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
