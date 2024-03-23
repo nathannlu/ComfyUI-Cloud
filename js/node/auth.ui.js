@@ -1,7 +1,8 @@
+import { setData } from '../store.js';
 import { headerHtml, loadingIcon } from '../ui.js';
-import { loginUser, registerUser } from '../client.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
 import { infoDialog } from '../comfy/ui.js';
+import { nimbus } from '../resource/index.js';
 
 class AuthDialog extends ComfyDialog {
   container = null;
@@ -56,23 +57,34 @@ class AuthDialog extends ComfyDialog {
 
       this.setButtonLoading(true)
 
-      const data = await loginUser({ email, password })
-      if(data.status !== 200 && data.message) {
-        this.setErrorMessage(data.message)
-      }
+      try {
+        const data = await nimbus.auth.login({ email, password })
+        setData({
+          apiKey: data.token,
+          user: data.user
+        })
 
-      this.setButtonLoading(false, "Login")
-
-      console.log(data)
-
-      if(data.status == 200) {
         infoDialog.show();
         infoDialog.showMessage(
           "Authenticated",
           "You are now logged in",
         );
         this.close()
+
+      } catch(e) {
+        this.setErrorMessage(e.message)
+      } finally {
+        this.setButtonLoading(false, "Login")
       }
+
+
+      /*
+      const data = await loginUser({ email, password })
+      if(data.status !== 200 && data.message) {
+        this.setErrorMessage(data.message)
+      }
+      */
+
     }
     const link = this.container.querySelector("#go-to-register");
     link.onclick = () => {
@@ -101,19 +113,24 @@ class AuthDialog extends ComfyDialog {
 
       this.setButtonLoading(true)
 
-      const data = await registerUser({ email, password })
-      if(data.status !== 200 && data.message) {
-        this.setErrorMessage(data.message)
-      }
-      this.setButtonLoading(false, "Sign up")
+      try {
+        const data = await nimbus.auth.register({ email, password })
+        setData({
+          apiKey: data.token,
+          user: data.user
+        })
 
-      if(data.status == 201) {
         infoDialog.show();
         infoDialog.showMessage(
           "Authenticated",
           "You are now logged in",
         );
         this.close()
+
+      } catch(e) {
+        this.setErrorMessage(e.message)
+      } finally {
+        this.setButtonLoading(false, "Sign up")
       }
     }
     const link = this.container.querySelector("#go-to-login");

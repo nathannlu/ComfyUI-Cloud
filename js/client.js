@@ -1,4 +1,4 @@
-import { setData, getData } from './store.js';
+import { getData } from './store.js';
 import { 
   getWorkflowId, 
   getCustomNodesList, 
@@ -7,57 +7,6 @@ import {
 import { logger } from "./logger.js";
 import { endpoint } from './constants.js';
 
-export const loginUser = async ({ email, password }) => {
-  const apiRoute = endpoint + "/auth/login";
-  const body = {
-    email: email,
-    password: password,
-  }
-  const res = await fetch(apiRoute, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-  const data = await res.json()
-
-  // @todo - save api token
-  if(res.status == 200 && data) {
-    setData({
-      apiKey: data.token,
-      user: data.user
-    })
-  }
-
-  return { ...data, status: res.status };
-}
-
-export const registerUser = async ({ email, password }) => {
-  const apiRoute = endpoint + "/auth/register";
-  const body = {
-    email: email,
-    password: password,
-  }
-  const res = await fetch(apiRoute, {
-    method: "POST",
-    body: JSON.stringify(body),
-    headers: {
-      "Content-Type": "application/json",
-    },
-  })
-
-  const data = await res.json()
-
-  if(res.status == 201 && data) {
-    setData({
-      apiKey: data.token,
-      user: data.user
-    })
-  }
-
-  return { ...data, status: res.status };
-}
 
 export const syncDependencies = async (diff) => {
   logger.info("Syncing dependencies")

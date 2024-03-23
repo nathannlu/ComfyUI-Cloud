@@ -51,15 +51,24 @@ const billing = {
   },
 }
 
+const auth = {
+  register: {
+    method: "POST",
+    path: "/auth/register"
+  },
+  login: {
+    method: "POST",
+    path: "/auth/login"
+  }
+}
+
 
 export const apiEndpoints = {
   workflowRun,
   workflow,
   billing,
+  auth,
 }
-
-
-
 
 
 

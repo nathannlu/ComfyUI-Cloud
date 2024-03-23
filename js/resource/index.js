@@ -1,3 +1,7 @@
+/**
+ * Communicating with internal and external
+ * API resources
+ */
 import { getData } from '../store.js';
 import { extractUrlParams, makeURLInterpolator } from './utils.js';
 import { apiEndpoints } from './endpoints.js';
@@ -59,14 +63,21 @@ function gen(value) {
 
       const res = await fetch(fullPath, opts)
 
+      // Check if .json() exists in the response
+      const data = res.headers.get('content-type').includes('application/json')
+        ? await res.json()
+        : null;
+
       if (res.status !== 200 && res.status !== 201) {
-        throw new Error("Server error")
+        const errorMessage = data?.message || "Server error"
+        throw new Error(errorMessage)
       }
 
-      const data = await res.json()
       return data;
     } catch(e) {
       console.log(e)
+      const errorMessage = e?.message || "Something went wrong. Please try again"
+      throw new Error(errorMessage)
     }
   }
 }
