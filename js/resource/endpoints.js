@@ -36,7 +36,30 @@ const workflow = {
   }
 }
 
+const billing = {
+  retrieveCustomerSession: {
+    method: "GET",
+    path: "/stripe/get-customer-session"
+  },
+  retrieveUsage: {
+    method: "GET",
+    path: "/stripe/usage"
+  },
+  retrieveCredits: {
+    method: "GET",
+    path: "/stripe/credits"
+  },
+}
+
+
 export const apiEndpoints = {
   workflowRun,
   workflow,
+  billing,
 }
+
+
+
+
+
+
