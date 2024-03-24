@@ -84,13 +84,12 @@ const LoadingButton = ({ onclick }, text) => {
 }
 
 
-export const RunDetails = (activeTab, runId) => {
+export const RunDetails = (activeTab, runId, poll, closeDialogWithMessage) => {
   const data = van.state(nimbus.workflowRun.pollRun(runId.val)) // workflowRun data
   const output = van.state(null)
 
-  van.derive(async() => console.log(await data.val))
-
-  let poll;
+  //debug function
+  //van.derive(async() => console.log(await data.val))
 
   const start = () => poll = poll || setInterval(async () => {
     const { workflowRun } = await nimbus.workflowRun.pollRun(runId.val)
@@ -134,9 +133,17 @@ export const RunDetails = (activeTab, runId) => {
 
                 ProgressBar(progress),
 
+                // @TODO
                 // on terminate, show modal and close
                 div(
-                  LoadingButton({onclick:async() => await nimbus.workflowRun.cancel(runId.val)}, "Terminate")
+                  LoadingButton({onclick:async() => {
+                    await nimbus.workflowRun.cancel(runId.val)
+                    closeDialogWithMessage(
+                      "Successfully terminated",
+                      "You will only be billed for the time your workflow was running."
+                    )
+
+                  }}, "Terminate")
                 ),
               ) : "",
 
