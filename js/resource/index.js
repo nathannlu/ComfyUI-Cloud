@@ -5,12 +5,13 @@
 import { getData } from '../store.js';
 import { extractUrlParams, makeURLInterpolator } from './utils.js';
 import { apiEndpoints } from './endpoints.js';
+import { localEndpoints } from './local.js';
 import {
   getWorkflowId, 
 } from '../utils.js';
 import { endpoint } from '../constants.js';
 
-function gen(value) {
+function gen(value, endpoint) {
   return async function(...args) {
     const { apiKey } = getData();
     const workflowId = getWorkflowId()
@@ -82,13 +83,13 @@ function gen(value) {
   }
 }
 
-function prepare() {
+function prepare(routes, endpoint) {
   let nimbus = {};
-  for (const [cls, value] of Object.entries(apiEndpoints)) {
+  for (const [cls, value] of Object.entries(routes)) {
     nimbus[cls] = {}
 
     for (const [funcName, funcData] of Object.entries(value)) {
-      const func = gen(funcData)
+      const func = gen(funcData, endpoint)
 
       nimbus[cls][funcName] = func
     }
@@ -97,5 +98,8 @@ function prepare() {
   return nimbus;
 }
 
-export const nimbus = prepare()
+export const nimbus = prepare(apiEndpoints, endpoint)
+const _local = prepare(localEndpoints, "")
+
+export const local = _local.local;
 

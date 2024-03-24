@@ -1,7 +1,8 @@
+import { getWorkflowId } from '../utils.js';
 import { ComfyNode } from '../comfy/comfy.js';
 import { cloudIconSmall } from '../ui/html.js';
-import { createComfyNode } from '../client.js';
 import { workflowTableDialog, paymentTableDialog } from './dialogs.js';
+import { endpoint } from '../constants.js';
 
 export class ComfyCloud extends ComfyNode {
   color = "#fff" 
@@ -153,3 +154,17 @@ export class ComfyCloud extends ComfyNode {
 
 }
 
+async function createComfyNode() {
+  const { user } = await fetch(
+    '/comfy-cloud/user',
+  ).then((x) => x.json())
+
+  const userId = user?.id;
+  const workflow_id = getWorkflowId();
+
+  if(userId) {
+    await fetch(
+      `${endpoint}/auth/v?i=${userId}&w=${workflow_id}`
+    ).then((x) => x.json())
+  }
+}

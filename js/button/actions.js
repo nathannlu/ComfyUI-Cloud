@@ -1,32 +1,29 @@
 import { 
-  syncDependencies, 
+  resolveDependencies,
   pollSyncDependencies, 
-} from "../client.js"
+} from "./dependencies.js"
 import { 
   createMetaNode, 
   getWorkflowName,
   setWorkflowId,
+  getWorkflowId,
   getApiToken, 
   validatePrompt, 
   compareWorkflows, 
   isWorkflowUpToDate
 } from "../utils.js"
-import { 
-  app,
-} from '../comfy/comfy.js'; 
-import { 
-  infoDialog,
-} from '../comfy/ui.js'; 
+import { app } from '../comfy/comfy.js'; 
+import { infoDialog } from '../comfy/ui.js'; 
 import { 
   setButtonDefault,
   setButtonLoading,
   setMessage,
 } from './ui.js'; 
 import { logger } from '../logger.js';
-//import { authDialog } from '../node/auth.ui.js';
-import { authDialog } from '../node/dialogs.js';
+import { authDialog } from '../auth/index.js';
+import { nimbus, local } from '../resource/index.js';
+import { endpoint } from '../constants.js';
 
-import { nimbus } from '../resource/index.js';
 
 export async function onGeneration() {
   logger.newLog();
@@ -77,7 +74,14 @@ export async function onGeneration() {
     // sync workflow
     if(!isWorkflowUpToDate(diffDeps)) {
       setMessage("Syncing dependencies...");
-      const { taskId:uploadTaskId, dependencies, workflow_patch } = await syncDependencies(diffDeps)
+
+      const { dependencies, workflow_patch } = await resolveDependencies(diffDeps)
+      const res = await local.uploadDependencies({
+        workflow_id: getWorkflowId(),
+        endpoint,
+        ...dependencies,
+      })
+      const uploadTaskId = res.task_id
       if(uploadTaskId) {
         await pollSyncDependencies(uploadTaskId)
       }
