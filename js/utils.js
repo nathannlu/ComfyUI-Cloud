@@ -86,9 +86,13 @@ export const getWorkflowName = () => {
   // @todo 
   // handle no deployMetaNode
 
-  const { workflow_name } = deployMetaNode.properties;
-  //const name = deployMetaNode.widgets[0].value;
-  return workflow_name;
+  if(deployMetaNode) {
+    const { workflow_name } = deployMetaNode.properties;
+    //const name = deployMetaNode.widgets[0].value;
+    return workflow_name;
+  } else {
+    return null
+  }
 }
 export const getWorkflowId = () => {
   let deployMeta = app.graph.findNodesByType("ComfyCloud");
@@ -97,9 +101,13 @@ export const getWorkflowId = () => {
   // @todo 
   // handle no deployMetaNode
 
-  const { workflow_id } = deployMetaNode.properties;
-  //const workflow_id = deployMetaNode.widgets[1].value;
-  return workflow_id;
+  if(deployMetaNode) {
+    const { workflow_id } = deployMetaNode.properties;
+    //const workflow_id = deployMetaNode.widgets[1].value;
+    return workflow_id;
+  } else {
+    return null
+  }
 }
 export const getVersion = () => {
   let deployMeta = app.graph.findNodesByType("ComfyCloud");
