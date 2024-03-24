@@ -1,8 +1,8 @@
-import van from '../../lib/van.js';
-import { setData } from '../../store.js';
-import { nimbus } from '../../resource/index.js';
-import { infoDialog } from '../../comfy/ui.js';
-import { generateForm } from '../../ui/form.js';
+import van from '../lib/van.js';
+import { setData } from '../store.js';
+import { nimbus } from '../resource/index.js';
+import { infoDialog } from '../comfy/ui.js';
+import { generateForm } from '../ui/form.js';
 
 const { a, div, p } = van.tags
 
