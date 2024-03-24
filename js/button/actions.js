@@ -23,7 +23,8 @@ import {
   setMessage,
 } from './ui.js'; 
 import { logger } from '../logger.js';
-import { authDialog } from '../node/auth.ui.js';
+//import { authDialog } from '../node/auth.ui.js';
+import { authDialog } from '../node/dialogs.js';
 
 import { nimbus } from '../resource/index.js';
 
