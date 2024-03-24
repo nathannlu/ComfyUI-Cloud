@@ -2,7 +2,7 @@
   <img alt="Comfy Cloud" src="https://github.com/nathannlu/comfyui-cloud/assets/24965772/9181ff0a-1d27-41f3-93e7-b309ed9d533c" />
 </p>
 <p align="center">
-  Join <a href="https://discord.gg/2PTNx3VCYa" target="_blank">Discord</a> to have your questions answered immediately!
+  <a href="#comfy-cloud-plugin-installation">Installation</a>  - <a href="https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md">Docs</a> - <a href="https://discord.gg/2PTNx3VCYa">Support</a> - <a href="https://discord.gg/2PTNx3VCYa">Bug reports</a> 
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/stability-beta-blue" />
@@ -29,10 +29,7 @@ https://github.com/nathannlu/comfyui-cloud/assets/24965772/1c8ea638-edc3-49b8-ab
 3. Run your workflow!
 
 ## How to use 
-After you first install the plugin...
-1. The first time you click 'generate', you will be prompted to log into your account.
-2. Subsequent generations after the first is faster (the first run it takes a while to process your workflow).
-Once those two steps have been completed, you will be able to seamlessly generate your workflow on the cloud!
+Check out our [Getting Started guide](https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md)!
 
 ## Special Thanks
 <a href="https://github.com/NVIDIA"><img src="https://avatars.githubusercontent.com/u/1728152?v=4" width="50" height="50" alt=""/></a>
