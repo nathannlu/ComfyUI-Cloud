@@ -1,15 +1,12 @@
 import { headerHtml } from '../ui.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
-import { infoDialog } from '../comfy/ui.js';
-
-import { WorkflowRunsTable } from '../ui/table.js';
-import { RunDetails } from '../ui/runDetails.js';
 import van from '../lib/van.js';
 
-const activeTab = van.state(0)
-const runId = van.state(null)
+import { nimbus } from '../resource/index.js';
 
-class WorkflowTableDialog extends ComfyDialog {
+import { RemainingCredits } from '../ui/credits.js';
+
+class PaymentTableDialog extends ComfyDialog {
   container = null;
 
   constructor() {
@@ -21,15 +18,17 @@ class WorkflowTableDialog extends ComfyDialog {
 
     this.container = document.createElement("div");
     this.container.style.color = "white";
-    this.container.style.width = "720px";
-    this.container.style.minHeight = "540px";
 
     this.header = document.createElement("div");
     this.header.innerHTML = headerHtml
     this.element.querySelector(".comfy-modal-content").prepend(this.container);
     this.element.querySelector(".comfy-modal-content").prepend(this.header);
 
-    this.poll = null;
+    // set stripe script
+    var script = document.createElement('script');
+    script.src = "https://js.stripe.com/v3/buy-button.js"
+    script.async = true
+    this.container.appendChild(script);
   }
 
   createButtons() {
@@ -50,37 +49,38 @@ class WorkflowTableDialog extends ComfyDialog {
   close() {
     this.container.removeChild(this.component)
     this.component.remove()
-
-    activeTab.val = 0
-    runId.val = null
-    
-    //this.innerContainer.remove()
     this.element.style.display = "none";
   }
 
   async show() {
-    activeTab.val = 0
-
-    const closeDialogWithMessage = (header, message) => {
-      infoDialog.show();
-      infoDialog.showMessage(
-        header,
-        message,
-      );
-      clearInterval(this.poll)
-      this.close()
-    }
+    // Fetch customer sesh
 
     this.component = document.createElement("div");
-    van.add(this.component, () => van.tags.div(
-      activeTab.val == 0 ? WorkflowRunsTable(activeTab, runId) : RunDetails(activeTab, runId, this.poll, closeDialogWithMessage)
-    ))
-
+    van.add(this.component, RemainingCredits())
     this.container.append(this.component)
+
+    // fetch customer sesh
+    const { customerSession } = await nimbus.billing.retrieveCustomerSession()
+     
+    var stripeEmbed = document.createElement('div');
+    stripeEmbed.innerHTML = StripeEmbed(
+      "pk_live_84RN49GepXnzAQjmBizHqqzP00Jon7hFeu",
+      customerSession.client_secret
+    );
+    this.component.appendChild(stripeEmbed);
 
     this.element.style.display = "flex";
     this.element.style.zIndex = 1001;
   }
 }
-export const workflowTableDialog = new WorkflowTableDialog()
 
+export const paymentTableDialog = new PaymentTableDialog()
+
+const StripeEmbed = (publicKey, client_secret) => `
+  <stripe-buy-button
+    buy-button-id="buy_btn_1Oxf5MIO9d9HAC5qTz8GDWGA"
+    publishable-key="${publicKey}"
+    customer-session-client-secret="${client_secret}"
+  >
+  </stripe-buy-button>
+`
