@@ -1,5 +1,5 @@
 import { onGeneration } from './actions.js';
-import { loadingIcon, cloudIcon } from '../ui.js';
+import { loadingIcon, cloudIcon } from '../ui/html.js';
 
 /**
  * HTML, UI dialogs, etc

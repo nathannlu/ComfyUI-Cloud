@@ -1,8 +1,7 @@
 import { ComfyNode } from '../comfy/comfy.js';
-import { cloudIconSmall } from '../ui.js';
+import { cloudIconSmall } from '../ui/html.js';
 import { createComfyNode } from '../client.js';
-import { workflowTableDialog } from './workflows.ui.js';
-import { paymentTableDialog } from './payment.ui.js';
+import { workflowTableDialog, paymentTableDialog } from './dialogs.js';
 
 export class ComfyCloud extends ComfyNode {
   color = "#fff" 

@@ -1,5 +1,5 @@
 import { setData } from '../store.js';
-import { headerHtml, loadingIcon } from '../ui.js';
+import { headerHtml, loadingIcon } from '../ui/html.js';
 import { ComfyDialog, $el } from '../comfy/comfy.js';
 import { infoDialog } from '../comfy/ui.js';
 import { nimbus } from '../resource/index.js';
