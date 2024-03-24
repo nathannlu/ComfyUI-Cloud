@@ -5,6 +5,22 @@ import { nimbus } from '../resource/index.js';
 
 const {video, img, a, button, div, b, span, source } = van.tags
 
+
+const Alert = ({ title, message, status = "info" }) => {
+
+  const colors = {
+    INFO: "#bee3f8",
+    WARNING: "#feebc8",
+    ERROR: "#fed7d7",
+    SUCCESS: "#c6f6d5",
+  }
+
+  return () => div({style: `color: black; padding: 16px; background-color: ${colors[status.toUpperCase()]}`},
+    b(title),
+    message
+  )
+}
+
 const GenerateOutputs = (outputs) => {
   return outputs?.map((run) => {
     const fileName = run.data.images?.[0].filename ||
@@ -67,12 +83,22 @@ const ETA = ({ workflowRun, progress }) => {
     return elapsedTimeInSeconds.val + remainingProgressInSeconds;
   })
 
-  return () => div({}, b("Estimated total running time: "), `${estimatedRunningTime.val}s`)
+  return () => div( 
+    estimatedRunningTime.val !== undefined && estimatedRunningTime.val > 300 ? 
+    Alert({ title: "Warning", status: "warning", message: () => div(
+    "This execution will most likely not complete. Your current plan only supports generation time of 300 seconds. ",
+     `This generation is estimated to be ${estimatedRunningTime.val}s`)}) : 
+    div(
+      b("Estimated total running time: "), 
+      `${estimatedRunningTime.val || "--"}s`
+    )
+  )
 }
 
 const ProgressBar = (progress) => {
-  return () => div({style: `width: ${progress.value/progress.max * 100}%; height: 24px; background-color: #1D4AFF; transition: all .2s;`},
-    `${progress.value}% - ${progress.iterationsPerSecond} it/s`
+  const progressPercentage = progress.value/progress.max * 100
+  return () => div({style: `width: ${progressPercentage}%; height: 24px; background-color: #1D4AFF; transition: all .2s;`},
+    `${progressPercentage}% - ${progress.iterationsPerSecond} it/s`
   )
 }
 
@@ -109,7 +135,7 @@ export const RunDetails = (activeTab, runId, poll, dialogInstance) => {
   //van.derive(async() => console.log(await data.val))
 
   const start = () => poll = poll || setInterval(async () => {
-    const { workflowRun } = await nimbus.workflowRun.pollRun(runId.val)
+    const { workflowRun, progress } = await nimbus.workflowRun.pollRun(runId.val)
 
     if(workflowRun?.status == "success" || workflowRun?.status == "failed" || workflowRun?.status == "terminated") {
       // Stop poll
@@ -122,7 +148,7 @@ export const RunDetails = (activeTab, runId, poll, dialogInstance) => {
       }
     } 
 
-    data.val = Promise.resolve({ workflowRun })
+    data.val = Promise.resolve({ workflowRun, progress })
   }, 2000)
 
   start()
@@ -145,13 +171,11 @@ export const RunDetails = (activeTab, runId, poll, dialogInstance) => {
                 workflowRun.status,
               ),
 
-              typeof progress == 'object' ? div({style: 'display: flex; flex-direction: column; gap: 8px'},
+              progress != null ? div({style: 'display: flex; flex-direction: column; gap: 8px'},
                 ETA({workflowRun, progress}),
 
                 ProgressBar(progress),
 
-                // @TODO
-                // on terminate, show modal and close
                 div(
                   LoadingButton({onclick:async() => {
                     await nimbus.workflowRun.cancel(runId.val)
@@ -166,14 +190,18 @@ export const RunDetails = (activeTab, runId, poll, dialogInstance) => {
 
               
               div(
-                (output.val !== null && (workflowRun?.status == "success" || workflowRun?.status == "failed")) ? Await({
-                  value: output.val, 
-                  container: span,
-                  Loading: () => "Loading output",
-                  Error: () => "Request failed.",
-                }, data => div(
-                  data?.outputs ? GenerateOutputs(data.outputs) : ""
-                )) : "",
+                workflowRun?.status == "success" || workflowRun?.status == "failed" ? div(
+                  output.val == null ? 
+                  "Loading output" : 
+                  Await({
+                    value: output.val, 
+                    container: span,
+                    Loading: () => "Loading output",
+                    Error: () => "Request failed.",
+                  }, data => div(
+                    data?.outputs ? GenerateOutputs(data.outputs) : ""
+                  ))
+                ) : "",
               ),
             )
           ),
