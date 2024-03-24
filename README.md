@@ -17,7 +17,9 @@ Don't have enough VRAM for certain nodes? Our custom node enables you to run Com
 - No need to spend cash for a new GPU
 
 
-https://github.com/nathannlu/comfyui-cloud/assets/24965772/1c8ea638-edc3-49b8-ab77-9e4987764e70
+https://github.com/nathannlu/ComfyUI-Cloud/assets/24965772/b53888a1-8e9a-4ddb-914b-fce4f0c157fe
+
+
 
 
 ## Comfy Cloud Plugin Installation
