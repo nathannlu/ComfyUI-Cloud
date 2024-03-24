@@ -3,7 +3,6 @@ import {
   getCustomNodesList, 
   isCustomNode,
 } from '../utils.js'
-import { logger } from "../logger.js";
 import { local } from '../resource/index.js';
 
 const isVideoExtension = z => z.endsWith('.webm') ||
@@ -127,12 +126,10 @@ export const pollSyncDependencies = async (taskId) => {
 
     try {
       const statusData = await local.pollUploadStatus(taskId) //await fetch(`/comfy-cloud/upload-status/${taskId}`);
-      //const statusData = await statusResponse.json();
       status = statusData.status;
 
-      logger.info(`Received from polling for upload status: ${status}`);
     } catch(e) {
-      logger.error("fetch error when polling for upload status", e)
+      console.error("Poll dependencies error:", e)
     }
 
   }

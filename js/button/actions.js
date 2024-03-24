@@ -19,14 +19,12 @@ import {
   setButtonLoading,
   setMessage,
 } from './ui.js'; 
-import { logger } from '../logger.js';
 import { authDialog } from '../auth/index.js';
 import { nimbus, local } from '../resource/index.js';
 import { endpoint } from '../constants.js';
 
 
 export async function onGeneration() {
-  logger.newLog();
   try {
     setButtonDefault()
 
@@ -109,10 +107,8 @@ export async function onGeneration() {
     )
   } catch (e) {
     // handle error
-    logger.error("onGeneration error", e)
     infoDialog.showMessage("Error", e);
   } finally {
-    await logger.saveLog()
     setButtonDefault()
     setMessage("")
   }

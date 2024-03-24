@@ -52,8 +52,6 @@ export const Login = (dialogInstance, activeTab) => {
     submitButtonText: "Login"
   };
 
-  console.log(activeTab)
-
   return () => div(
     generateForm(schema, dialogInstance),
     p({style: "color: #eee; text-align: center; margin-top: 20px; cursor: pointer;"},
