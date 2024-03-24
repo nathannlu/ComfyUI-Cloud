@@ -1,5 +1,6 @@
 import van from '../lib/van.js';
 import {Await} from '../lib/van-ui.js';
+import { infoDialog } from '../comfy/ui.js';
 import { nimbus } from '../resource/index.js';
 
 const {video, img, a, button, div, b, span, source } = van.tags
@@ -84,9 +85,25 @@ const LoadingButton = ({ onclick }, text) => {
 }
 
 
-export const RunDetails = (activeTab, runId, poll, closeDialogWithMessage) => {
+export const RunDetails = (activeTab, runId, poll, dialogInstance) => {
   const data = van.state(nimbus.workflowRun.pollRun(runId.val)) // workflowRun data
   const output = van.state(null)
+
+  dialogInstance.closeCallback = () => {
+    activeTab.val = 0
+    runId.val = null
+    clearInterval(poll)
+  }
+
+  const closeDialogWithMessage = (header, message) => {
+    infoDialog.show();
+    infoDialog.showMessage(
+      header,
+      message,
+    );
+    clearInterval(poll)
+    dialogInstance.close()
+  }
 
   //debug function
   //van.derive(async() => console.log(await data.val))
@@ -128,7 +145,7 @@ export const RunDetails = (activeTab, runId, poll, closeDialogWithMessage) => {
                 workflowRun.status,
               ),
 
-              progress ? div({style: 'display: flex; flex-direction: column; gap: 8px'},
+              typeof progress == 'object' ? div({style: 'display: flex; flex-direction: column; gap: 8px'},
                 ETA({workflowRun, progress}),
 
                 ProgressBar(progress),
