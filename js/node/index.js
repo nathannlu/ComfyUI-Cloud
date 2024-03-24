@@ -2,6 +2,7 @@ import { ComfyNode } from '../comfy/comfy.js';
 import { cloudIconSmall } from '../ui.js';
 import { createComfyNode } from '../client.js';
 import { workflowTableDialog } from './workflows.ui.js';
+import { paymentTableDialog } from './payment.ui.js';
 
 export class ComfyCloud extends ComfyNode {
   color = "#fff" 
@@ -37,11 +38,21 @@ export class ComfyCloud extends ComfyNode {
     this.menuButton = this.addButton("View past runs", {}, async () => {
       workflowTableDialog.show()
     })
+
     this.menuButton.x = 8 
     this.menuButton.y = this.size[1] - 28 - 8
     this.menuButton.color = "#fff"
     this.menuButton.backgroundColor = "#1D4AFF";
     //this.menuButton.fontSize = "10px";
+
+    this.settingsButton = this.addButton("Account", {}, async () => {
+      paymentTableDialog.show()
+    })
+
+    this.settingsButton.x = 8 + this.menuButton.width + 8
+    this.settingsButton.y = this.size[1] - 28 - 8
+    this.settingsButton.color = "#fff"
+    this.settingsButton.backgroundColor = "#1D4AFF";
   }
 
   onAdded() {
