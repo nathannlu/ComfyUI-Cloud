@@ -121,21 +121,23 @@ export const resolveDependencies = async (diff) => {
 
 export const pollSyncDependencies = async (taskId) => {
   let status = '';
+  let statusMessage = '';
   while (status !== 'Task completed' && status !== 'Task failed') {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before the next poll
 
     try {
       const statusData = await local.pollUploadStatus(taskId) //await fetch(`/comfy-cloud/upload-status/${taskId}`);
       status = statusData.status;
+      statusMessage = statusData.message;
 
     } catch(e) {
+      statusMessage = e?.message;
       console.error("Poll dependencies error:", e)
     }
-
   }
 
   if (status == "Task failed") {
-    throw new Error("Failed to upload")
+    throw new Error(statusMessage || "Failed to upload")
   }
 }
 

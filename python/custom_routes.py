@@ -249,9 +249,9 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
                 }
             )
             # cleanup temp
-            task_status[task_id] = {"status": "Task completed", "result": ""}
+            task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
         except Exception as e:
-            task_status[task_id] = {"status": f"Task failed: {str(e)}", "error": str(e)}
+            task_status[task_id] = {"status": f"Task failed", "message": str(e)}
 
     loop = asyncio.get_event_loop()
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -292,7 +292,7 @@ async def upload_dependencies(request):
             # Parse the JSON content
             json_response = response.json()
             task_id = str(uuid.uuid4())
-            task_status[task_id] = {"status": "Task started", "result": None}
+            task_status[task_id] = {"status": "Task started", "message": None}
 
             # Process custom nodes
             update_dependencies()
@@ -339,7 +339,7 @@ async def upload_dependencies(request):
 @server.PromptServer.instance.routes.get("/comfy-cloud/upload-status/{task_id}")
 async def get_task_status(request):
     task_id = request.match_info['task_id']
-    status = task_status.get(task_id, {"status": "Task not found"})
+    status = {"status": "Task failed", "message": str("asd")} #task_status.get(task_id, {"status": "Task failed", "message": "Task not found"})
     return web.json_response(status)    
 
 
