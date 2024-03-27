@@ -19,6 +19,10 @@ import server
 import execution
 import folder_paths
 
+from .upload import upload_file
+from .upload.blob import progress
+
+
 task_status = {}
 
 def random_seed(num_digits=15):
@@ -181,7 +185,7 @@ def load_custom_node(module_path, ignore=set()):
 
             return (module_name, mappings)
         else:
-            print(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
+            #print(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
             return (module_name, [])
     except Exception as e:
         print(traceback.format_exc())
@@ -207,9 +211,13 @@ def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_d
                 raise
 
 def update_dependencies():
+
+    base = folder_paths.base_path
+    custom_nodes_dir = os.path.join(base, "custom_nodes")
+
     # Loop over the files in the specified directory
-    for custom_node in os.listdir("../../custom_nodes/"):
-        filepath = os.path.join("../../custom_nodes", custom_node, "requirements.txt")
+    for custom_node in os.listdir(custom_nodes_dir):
+        filepath = os.path.join(custom_nodes_dir, custom_node, "requirements.txt")
         
         # Check if the file is a requirements.txt file
         if os.path.exists(filepath):
@@ -239,23 +247,19 @@ def update_dependencies():
                 file.writelines(updated_lines)
             
 async def upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files):
-    def run():
-        try:
-            exec(base64.b64decode(json_response["data"]), {
-                    "workflow_id": workflow_id,
-                    "models_dep": models_dep,
-                    "nodes_dep": nodes_dep,
-                    "files": files,
-                }
-            )
-            # cleanup temp
-            task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
-        except Exception as e:
-            task_status[task_id] = {"status": f"Task failed", "message": str(e)}
+    try:
+        await upload_file(
+            workflow_id,
+            models_dep,
+            nodes_dep,
+            files,
+        )
 
-    loop = asyncio.get_event_loop()
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        await loop.run_in_executor(executor, run)
+        # cleanup temp
+        task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
+    except Exception as e:
+        task_status[task_id] = {"status": f"Task failed", "message": str(e)}
+
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
 async def upload_dependencies(request):
@@ -281,7 +285,6 @@ async def upload_dependencies(request):
         body = {
             "token": current_datetime.strftime("%Y-%m-%d %H:%M:%S")
         }
-
 
         url = f"{endpoint}/e"
         response = make_post_request_with_retry(url, data=body, headers=headers)
@@ -339,7 +342,8 @@ async def upload_dependencies(request):
 @server.PromptServer.instance.routes.get("/comfy-cloud/upload-status/{task_id}")
 async def get_task_status(request):
     task_id = request.match_info['task_id']
-    status = {"status": "Task failed", "message": str("asd")} #task_status.get(task_id, {"status": "Task failed", "message": "Task not found"})
+    status = task_status.get(task_id, {"status": "Task failed", "message": "Task not found"})
+    status["progress"] = progress
     return web.json_response(status)    
 
 

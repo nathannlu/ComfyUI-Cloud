@@ -23,6 +23,60 @@ import { authDialog } from '../auth/index.js';
 import { nimbus, local } from '../resource/index.js';
 import { endpoint } from '../constants.js';
 
+import { ComfyCloudDialog } from '../comfy/ui.js';
+import van from '../lib/van.js';
+import { Await } from '../lib/van-ui.js';
+
+const {video, h2, img, a, button, div, b, span, source } = van.tags
+
+const ProgressBar = (progress) => {
+  const progressPercentage = 100 - (progress.value/progress.max * 100)
+  return () => div({style: `width: ${progressPercentage}%; height: 24px; background-color: #1D4AFF; transition: all .2s;`}, `${progressPercentage}%`)
+}
+
+const taskId = van.state(null)
+const Progress = (dialogInstance) => {
+  
+  const activeTab = van.state(0)
+  const data = van.state(local.pollUploadStatus(taskId.val)) // workflowRun data
+
+  const start = () => dialogInstance.poll = dialogInstance.poll || setInterval(async () => {
+    const res = await local.pollUploadStatus(taskId.val)
+    
+    if(res.status !== "Task started") {
+      // Stop poll
+      clearInterval(dialogInstance.poll)
+      dialogInstance.close()
+      dialogInstance, dialogInstance.poll = 0;
+    } 
+
+    data.val = Promise.resolve(res)
+  }, 1000)
+
+  start()
+
+  return () => van.tags.div({style: 'width: 520px'},
+    div(
+      h2("Upload progress"),
+    ),
+    Await({
+      value: data.val, 
+      container: span,
+      Loading: () => "Loading",
+      Error: () => "Request failed.",
+    }, data => div(
+      Object.keys(data.progress).length === 0 ? "Loading" : 
+      Object.entries(data.progress).map(([key, val]) => {
+      return () => div(
+        b(key),
+        ProgressBar({value: val.value, max: val.max})
+      )
+    }))
+  ))
+}
+
+export const progressDialog = new ComfyCloudDialog(Progress)
+
 
 export async function onGeneration() {
   try {
@@ -79,8 +133,14 @@ export async function onGeneration() {
         endpoint,
         ...dependencies,
       })
+
+
       const uploadTaskId = res.task_id
       if(uploadTaskId) {
+        taskId.val = uploadTaskId
+        // Open UI window
+        progressDialog.show();
+      
         await pollSyncDependencies(uploadTaskId)
       }
 
