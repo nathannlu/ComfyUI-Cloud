@@ -19,61 +19,11 @@ import server
 import execution
 import folder_paths
 
-from .upload import upload_file
+from .upload import upload_file_specs
+from .upload.spec import FileSpecContextManager
 from .upload.blob import progress
 
-
 task_status = {}
-
-def random_seed(num_digits=15):
-    range_start = 10 ** (num_digits - 1)
-    range_end = (10**num_digits) - 1
-    return random.randint(range_start, range_end)
-
-@server.PromptServer.instance.routes.post("/comfy-cloud/save-log")
-async def comfy_cloud_save_log(request):
-    try:
-        data = await request.json()
-        log = data.get("log")
-        log_id = log["logId"] #str
-        workflow_id = log.get("workflowId") #str
-        user_id = log["userId"] #str
-
-        timestamp = datetime.datetime.now()
-        formatted_timestamp = timestamp.strftime("%Y_%B_%d_%H-%M-%S")
-
-        # Create the full path for the log file
-        filename = f"log_{formatted_timestamp}.txt"
-        current_path = os.getcwd()
-        directory = os.path.join(current_path, "logs")
-        log_path = os.path.join(directory, filename)
-
-        # Check if the directory exists, if not, create it
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-
-        # Create a timestamp for the log entry
-        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        # Content to be written to the log file
-        log_content = f"Log entry created at: {timestamp}\n"
-        log_content += f"log_id: {log_id}\n"
-        log_content += f"workflow_id: {workflow_id}\n"
-        log_content += f"user_id: {user_id}\n"
-        log_content += f"---\n"
-
-        for log_entry in log["logs"]:
-            log_content += f"{log_entry}\n"
-
-        # Write the content to the log file
-        with open(log_path, 'w') as log_file:
-            log_file.write(log_content)
-
-        return web.json_response({ "success": True }, status=200)
-
-    except Exception as e:
-        print("Error:", e)
-        return web.json_response({ "error": e }, status=400)
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
@@ -101,6 +51,11 @@ async def comfy_cloud_validate_prompt(request):
     data = await request.json()
 
     workflow_api = data.get("workflow_api")
+
+    def random_seed(num_digits=15):
+        range_start = 10 ** (num_digits - 1)
+        range_end = (10**num_digits) - 1
+        return random.randint(range_start, range_end)
 
     for key in workflow_api:
         if 'inputs' in workflow_api[key] and 'seed' in workflow_api[key]['inputs']:
@@ -192,25 +147,10 @@ def load_custom_node(module_path, ignore=set()):
         print(f"Cannot import {module_path} module for custom nodes:", e)
         return (module_name, [])
 
-def make_post_request_with_retry(url, data, headers=None, max_retries=3, retry_delay=1):
-    for attempt in range(1, max_retries + 1):
-        try:
-            response = requests.post(url, data=data, headers=headers)
-
-            # Check if the response status code is OK (2xx)
-            response.raise_for_status()
-
-            return response
-        except requests.exceptions.RequestException as e:
-            print(f"Attempt {attempt} failed: {e}")
-            if attempt < max_retries:
-                print(f"Retrying in {retry_delay} seconds...")
-                time.sleep(retry_delay)
-            else:
-                print(f"Maximum retries reached. Failed to make POST request.")
-                raise
-
 def update_dependencies():
+    """
+    Formats requirements.txt
+    """
 
     base = folder_paths.base_path
     custom_nodes_dir = os.path.join(base, "custom_nodes")
@@ -246,14 +186,9 @@ def update_dependencies():
             with open(filepath, 'w') as file:
                 file.writelines(updated_lines)
             
-async def upload_task_execution(task_id, json_response, workflow_id, models_dep, nodes_dep, files):
+async def upload_task_execution(task_id, file_specs, workflow_id):
     try:
-        await upload_file(
-            workflow_id,
-            models_dep,
-            nodes_dep,
-            files,
-        )
+        await upload_file_specs(file_specs, workflow_id)
 
         # cleanup temp
         task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
@@ -265,51 +200,40 @@ async def upload_task_execution(task_id, json_response, workflow_id, models_dep,
 async def upload_dependencies(request):
     # Make a request to localhost
     try:
-        authorization = request.headers.get('Authorization')
         json_data = await request.json()
 
-        endpoint = json_data["endpoint"]
+        #endpoint = json_data["endpoint"]
         workflow_id = json_data["workflow_id"]
 
-        headers = None
-        if authorization:
-            headers = {
-                "Authorization": authorization
-            }
-
+        # dependencies
         models_dep = json_data["modelsToUpload"]
         nodes_dep = json_data["nodesToUpload"]
         files = json_data["filesToUpload"]
 
-        current_datetime = datetime.datetime.now()
-        body = {
-            "token": current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-        }
+        # Paths
+        base = folder_paths.base_path
+        models_dir = os.path.join(base, "models")
+        custom_nodes_dir = os.path.join(base, "custom_nodes")
+        # Paths - for searching through /model subfolders
+        paths = copy.deepcopy(folder_paths.folder_names_and_paths)
+        paths.pop("custom_nodes", None)
+        paths.pop("configs", None)
 
-        url = f"{endpoint}/e"
-        response = make_post_request_with_retry(url, data=body, headers=headers)
 
+        # Create upload task
+        task_id = str(uuid.uuid4())
+        task_status[task_id] = {"status": "Task started", "message": None}
 
-        # Check if the request was successful (status code 200)
-        if response.status_code == 200:
-            # Parse the JSON content
-            json_response = response.json()
-            task_id = str(uuid.uuid4())
-            task_status[task_id] = {"status": "Task started", "message": None}
+        # Our server uses a custom dependency manager
+        # that requires a specific format for requirements.txt.
+        # Loop through all dependent custom nodes and patch.
+        update_dependencies()
 
-            # Process custom nodes
-            update_dependencies()
+        # Upload code
+        file_specs = []
 
-            custom_nodes_bytes = {}
-
-            paths = copy.deepcopy(folder_paths.folder_names_and_paths)
-            paths.pop("custom_nodes", None)
-            paths.pop("configs", None)
-
-            base = folder_paths.base_path
-            models_dir = os.path.join(base, "models")
-            custom_nodes_dir = os.path.join(base, "custom_nodes")
-
+        # Add files
+        with FileSpecContextManager(file_specs) as batch:
             # Upload models
             for name in models_dep:
                 found = False
@@ -318,23 +242,41 @@ async def upload_dependencies(request):
                         model_path = os.path.join(models_dir, base_dir, name)
                         if os.path.exists(model_path):
                             found = True
+                            batch.put_file(model_path, f"/vol/{workflow_id}/comfyui/models/{base_dir}/{name}")
 
+                # Handle model not found
+                # We have to do this because the code for finding
+                # models need to go through each sub folder inside
+                # /models. 
+                # The models folder is comprised of subfolders such
+                # as checkpoints, controlnets, loras, etc
                 if found is False:
-                    return web.json_response({'success': False, 'message': f"Required model {name} was not found in your ComfyUI/models folder. Make sure you do not have extra_paths.yaml enabled"}, content_type='application/json')
+                    raise Exception(f"Required model {name} was not found in your ComfyUI/models folder. Make sure you do not have extra_paths.yaml enabled")
 
+            # Upload custom nodes
             for name in nodes_dep:
                 # check filepath exists
-                p = os.path.join(custom_nodes_dir, name)
+                p = os.path.join(custom_nodes_dir, f"/vol/{workflow_id}/comfyui/custom_nodes/{name}")
                 if not os.path.exists(p):
-                    return web.json_response({'success': False, 'message': f"Required node {name} was not found in your ComfyUI/custom_nodes folder. Make sure you do not have extra_paths.yaml enabled"}, content_type='application/json')
-                custom_nodes_bytes[name] = ""
+                    raise Exception(f"Required node {name} was not found in your ComfyUI/custom_nodes folder. Make sure you do not have extra_paths.yaml enabled")
 
-            asyncio.ensure_future(upload_task_execution(task_id, json_response, workflow_id, models_dep, custom_nodes_bytes, files))
+                batch.put_directory(p, name)
 
-            return web.json_response({'success': True, 'task_id': task_id}, content_type='application/json')
-        else:
-            return web.json_response({'success': False, 'message': "Failed to retrieve exec code"}, status=500, content_type='application/json')
+            # Upload input files
+            for filename in files:
+                input_file_path = os.path.join(input_dir, filename)
+                if os.path.exists(input_file_path):
+                    batch.put_file(input_file_path, f"/vol/{workflow_id}/comfyui/input/{filename}")
+                else:
+                    raise Exception(f"Input '{path}' does not exist.")
 
+            # Create file specs for upload
+            file_specs = batch.generate_specs()
+
+        # Queue upload task in background
+        asyncio.ensure_future(upload_task_execution(task_id, file_specs, workflow_id))
+
+        return web.json_response({'success': True, 'task_id': task_id}, content_type='application/json')
     except Exception as e:
         print("Error", e)
         return web.json_response({'success': False, 'message': str(e)}, status=500, content_type='application/json')

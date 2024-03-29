@@ -1,12 +1,10 @@
 import asyncio
-import dataclasses
 import hashlib
 import io
 import os
-import platform
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
-from typing import Any, AsyncIterator, BinaryIO, Callable, List, Optional, Union
+from typing import Any, AsyncIterator, BinaryIO, Callable, Dict, List, Optional, Union
 from urllib.parse import urlparse
 
 from aiohttp import BytesIOPayload
@@ -14,12 +12,11 @@ from aiohttp.abc import AbstractStreamWriter
 
 from modal.exception import ExecutionError
 from .sync import retry
-
-from modal._utils.hash_utils import get_sha256_hex
 from .net import http_client_with_tls, retry_transient_errors
 
 from tqdm import tqdm
 import logging
+import uuid
 
 progress = {}
 
@@ -119,6 +116,7 @@ class BytesIOSegmentPayload(BytesIOPayload):
             await writer.write(chunk)
 
     def remaining_bytes(self):
+        #print("Remaining bytes", self.filename, self.segment_length - self.num_bytes_read)
         if self.filename not in progress:
             progress[self.filename] = {}
         
@@ -145,6 +143,8 @@ async def _upload_to_s3_url(
             if content_type:
                 headers["Content-Type"] = content_type
 
+
+            #print("Uploading to s3", upload_url, payload)
             async with session.put(
                 upload_url,
                 data=payload,
@@ -180,6 +180,8 @@ async def _upload_to_s3_url(
                     )
 
                 return remote_md5
+
+            #print("Done upload to s3")
 
 
 async def perform_multipart_upload(
@@ -248,100 +250,60 @@ async def perform_multipart_upload(
                     f"Hash mismatch on multipart upload assembly: {expected_multipart_etag} not in {response_body}"
                 )
 
+async def blob_upload(spec):
+    r"""
+    This spec is not the same as FileUploadSpec.
+    It is an altered version provided from the server
+    that includes upload data on top of the existing
+    FileUploadSpec type
+    ---
+    type: str,
+    id: str,
+    blob_id: str,
+    data: {
+        # byte upload only
+        upload_url: str,
 
-def get_content_length(data: BinaryIO):
-    # *Remaining* length of file from current seek position
-    pos = data.tell()
-    data.seek(0, os.SEEK_END)
-    content_length = data.tell()
-    data.seek(pos)
-    return content_length - pos
+        # multipart upload only
+        "max_part_size": str
+        "part_urls": dict
+        "completion_url": str
 
+        # Fields from FileUploadSpec
+        **FileUploadSpec
+    }
+    """
+    is_multipart = spec["type"] == "multipart"
+    resp = spec["data"]
 
-@retry(n_attempts=5, base_delay=0.1, timeout=None)
-async def _download_from_url(download_url) -> bytes:
-    async with http_client_with_tls(timeout=None) as session:
-        async with session.get(download_url) as resp:
-            # S3 signal to slow down request rate.
-            if resp.status == 503:
-                logger.warning("Received SlowDown signal from S3, sleeping for 1 second before retrying.")
-                await asyncio.sleep(1)
+    # Find file
+    filename = resp["source_description"]
+    data = open(filename, "rb")
 
-            if resp.status != 200:
-                text = await resp.text()
-                raise ExecutionError(f"Get from url failed with status {resp.status}: {text}")
-            return await resp.read()
+    if is_multipart:
+        await perform_multipart_upload(
+            data,
+            content_length=resp["content_length"],
+            max_part_size=resp["max_part_size"],
+            part_urls=resp["part_urls"],
+            completion_url=resp["completion_url"],
+            filename=filename,
+        )
 
+    else:
+        content_length = resp["content_length"]
+        upload_hashes = resp["upload_hashes"]
 
-@dataclasses.dataclass
-class FileUploadSpec:
-    source: Callable[[], BinaryIO]
-    source_description: Any
-    mount_filename: str
+        payload = BytesIOSegmentPayload(data, segment_start=0, segment_length=content_length, filename = filename)
+        await _upload_to_s3_url(
+            resp["upload_url"],
+            payload,
+            # for single part uploads, we use server side md5 checksums
+            content_md5_b64=upload_hashes["md5_base64"],
+        )
 
-    use_blob: bool
-    content: Optional[bytes]  # typically None if using blob, required otherwise
-    sha256_hex: str
-    mode: int  # file permission bits (last 12 bits of st_mode)
-    size: int
+    return spec
 
-
-def _get_file_upload_spec(
-    source: Callable[[], BinaryIO], source_description: Any, mount_filename: PurePosixPath, mode: int
-) -> FileUploadSpec:
-    with source() as fp:
-        # Current position is ignored - we always upload from position 0
-        fp.seek(0, os.SEEK_END)
-        size = fp.tell()
-        fp.seek(0)
-
-        if size >= LARGE_FILE_LIMIT:
-            use_blob = True
-            content = None
-            sha256_hex = get_sha256_hex(fp)
-        else:
-            use_blob = False
-            content = fp.read()
-            sha256_hex = get_sha256_hex(content)
-
-    return FileUploadSpec(
-        source=source,
-        source_description=source_description,
-        mount_filename=mount_filename.as_posix(),
-        use_blob=use_blob,
-        content=content,
-        sha256_hex=sha256_hex,
-        mode=mode & 0o7777,
-        size=size,
-    )
-
-
-def get_file_upload_spec_from_path(
-    filename: Path, mount_filename: PurePosixPath, mode: Optional[int] = None
-) -> FileUploadSpec:
-    # Python appears to give files 0o666 bits on Windows (equal for user, group, and global),
-    # so we mask those out to 0o755 for compatibility with POSIX-based permissions.
-    mode = mode or os.stat(filename).st_mode & (0o7777 if platform.system() != "Windows" else 0o7755)
-    return _get_file_upload_spec(
-        lambda: open(filename, "rb"),
-        filename,
-        mount_filename,
-        mode,
-    )
-
-
-def get_file_upload_spec_from_fileobj(fp: BinaryIO, mount_filename: PurePosixPath, mode: int) -> FileUploadSpec:
-    def source():
-        # We ignore position in stream and always upload from position 0
-        fp.seek(0)
-        return fp
-
-    return _get_file_upload_spec(
-        source,
-        str(fp),
-        mount_filename,
-        mode,
-    )
 
 
 def use_md5(url: str) -> bool:
@@ -357,3 +319,5 @@ def use_md5(url: str) -> bool:
         return False
     else:
         raise Exception(f"Unknown S3 host: {host}")
+
+

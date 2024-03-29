@@ -6,6 +6,7 @@ import ssl
 import time
 import uuid
 
+import aiohttp
 from aiohttp import ClientSession, ClientTimeout, TCPConnector
 from aiohttp.web import Application
 from aiohttp.web_runner import AppRunner, SockSite
@@ -64,6 +65,10 @@ async def run_temporary_http_server(app: Application):
         await runner.cleanup()
 
 
+async def make_post_request(url, data):
+    async with aiohttp.ClientSession() as session:
+        async with session.post(url, json=data) as response:
+            return await response.json()
 
 
 
@@ -96,10 +101,12 @@ async def retry_transient_errors(
         total_deadline = None
 
     while True:
+
         metadata = [("x-idempotency-key", idempotency_key), ("x-retry-attempt", str(n_retries))]
         if n_retries > 0:
             metadata.append(("x-retry-delay", str(time.time() - t0)))
         timeouts = []
+
         if attempt_timeout is not None:
             timeouts.append(attempt_timeout)
         if total_timeout is not None:
@@ -110,6 +117,7 @@ async def retry_transient_errors(
             timeout = None
         try:
             return await fn(*args, metadata=metadata, timeout=timeout)
+
         except (StreamTerminatedError, GRPCError, socket.gaierror, asyncio.TimeoutError) as exc:
             if isinstance(exc, GRPCError) and exc.status not in status_codes:
                 raise exc
