@@ -193,6 +193,7 @@ async def upload_task_execution(task_id, file_specs, workflow_id):
         # cleanup temp
         task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
     except Exception as e:
+        print(e)
         task_status[task_id] = {"status": f"Task failed", "message": str(e)}
 
 
@@ -218,7 +219,6 @@ async def upload_dependencies(request):
         paths = copy.deepcopy(folder_paths.folder_names_and_paths)
         paths.pop("custom_nodes", None)
         paths.pop("configs", None)
-
 
         # Create upload task
         task_id = str(uuid.uuid4())
@@ -256,11 +256,12 @@ async def upload_dependencies(request):
             # Upload custom nodes
             for name in nodes_dep:
                 # check filepath exists
-                p = os.path.join(custom_nodes_dir, f"/vol/{workflow_id}/comfyui/custom_nodes/{name}")
+                p = os.path.join(custom_nodes_dir, name)
+                print("PATH",p)
                 if not os.path.exists(p):
                     raise Exception(f"Required node {name} was not found in your ComfyUI/custom_nodes folder. Make sure you do not have extra_paths.yaml enabled")
 
-                batch.put_directory(p, name)
+                batch.put_directory(p, f"/vol/{workflow_id}/comfyui/custom_nodes/{name}")
 
             # Upload input files
             for filename in files:

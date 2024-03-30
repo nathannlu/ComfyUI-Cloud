@@ -25,6 +25,7 @@ from typing import (
     Any, 
 )
 import aiostream
+import zlib
 from .sync import synchronize_api
 from .blob import LARGE_FILE_LIMIT
 from .hash import get_sha256_hex, get_upload_hashes
@@ -61,6 +62,12 @@ def _get_file_upload_spec(
         size = fp.tell()
         fp.seek(0)
 
+        # Hotfix - cannot send bytes over http
+        use_blob = True
+        content = None
+        sha256_hex = get_sha256_hex(fp)
+
+        """
         if size >= LARGE_FILE_LIMIT:
             use_blob = True
             content = None
@@ -69,6 +76,7 @@ def _get_file_upload_spec(
             use_blob = False
             content = fp.read()
             sha256_hex = get_sha256_hex(content)
+        """
 
     return FileUploadSpec(
         source=source,
@@ -119,6 +127,7 @@ def serialize_spec(spec: FileUploadSpec) -> Dict[Any, Any]:
 
     obj["source_description"] = str(spec.source_description)
 
+
     with spec.source() as data:
         upload_hashes = get_upload_hashes(data)
 
@@ -130,6 +139,13 @@ def serialize_spec(spec: FileUploadSpec) -> Dict[Any, Any]:
         obj["upload_hashes"] = upload_hashes.__dict__
         obj["content_length"] = content_length
         del obj["source"]
+
+    # Serialize bytes
+    # At the moment this is too large to
+    # send over http
+    if obj["content"] is not None:
+        encoded_content = base64.b64encode(obj["content"]).decode('utf-8')
+        obj["content"] = encoded_content
 
     return obj
 
