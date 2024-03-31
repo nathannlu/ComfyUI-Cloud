@@ -240,7 +240,7 @@ async def upload_dependencies(request):
                 remote_path = path[1]
                 if os.path.isfile(local_path):
                     batch.put_file(local_path, remote_path)
-                if os.path.isdir(local_path):
+                elif os.path.isdir(local_path):
                     batch.put_directory(local_path, remote_path)
                 else:
                     raise Exception("Something went wrong")
