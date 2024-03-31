@@ -3,6 +3,89 @@ import { getData, setData } from '../store.js';
 import { headerHtml } from '../ui/html.js';
 import van from '../lib/van.js';
 
+export class ComfyCloudPopover extends ComfyDialog {
+  container = null;
+
+  constructor(ui) {
+    super();
+
+    this.element.classList.add("comfy-normal-modal");
+    this.element.style.padding = "16px";
+    this.element.style.overflowY = "auto";
+
+    this.container = document.createElement("div");
+    this.container.style.color = "white";
+
+    this.header = document.createElement("div");
+    this.header.innerHTML = headerHtml
+    this.element.querySelector(".comfy-modal-content").prepend(this.container);
+    //this.element.querySelector(".comfy-modal-content").prepend(this.header);
+    this.element.style.top = "24px";
+    this.element.style.left = "14px";
+    this.element.style.transform = "none";
+
+    this.component = null;
+    this.ui = ui
+  }
+
+  createButtons() {
+    return [
+      $el(
+        "div",
+        [
+          /*
+          $el("button", {
+            type: "button",
+            textContent: "Close",
+            onclick: () => this.close(),
+          }),
+          */
+        ],
+      ),
+    ];
+  }
+
+  _renderComponent() {
+    this.component = document.createElement("div");
+    van.add(this.component, this.ui(this))
+    this.container.append(this.component)
+  }
+
+  _clearComponent() {
+    this.container.removeChild(this.component)
+    this.component.remove()
+    this.component = null;
+  }
+
+  show() {
+    if(this.component == null) {
+      this._renderComponent();
+    } else {
+      // clear component
+      this._clearComponent();
+
+      // read component
+      this._renderComponent();
+    }
+
+    this.element.style.display = "flex";
+    this.element.style.zIndex = 1001;
+
+  }
+
+  close() {
+    this._clearComponent();
+    this.element.style.display = "none";
+    this.closeCallback(this)
+  }
+
+  closeCallback() {
+    /**
+     * For extensions to implement
+     */
+  }
+}
+
 export class ComfyCloudDialog extends ComfyDialog {
   container = null;
 

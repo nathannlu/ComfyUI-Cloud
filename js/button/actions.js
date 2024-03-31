@@ -23,7 +23,7 @@ import { authDialog } from '../auth/index.js';
 import { nimbus, local } from '../resource/index.js';
 import { endpoint } from '../constants.js';
 
-import { ComfyCloudDialog } from '../comfy/ui.js';
+import { ComfyCloudDialog, ComfyCloudPopover } from '../comfy/ui.js';
 import van from '../lib/van.js';
 import { Await } from '../lib/van-ui.js';
 
@@ -55,9 +55,9 @@ const Progress = (dialogInstance) => {
 
   start()
 
-  return () => van.tags.div({style: 'width: 520px'},
+  return () => van.tags.div({style: 'width: 320px'},
     div(
-      h2("Upload progress"),
+      h2("Uploading dependencies"),
     ),
     Await({
       value: data.val, 
@@ -75,8 +75,8 @@ const Progress = (dialogInstance) => {
   ))
 }
 
-export const progressDialog = new ComfyCloudDialog(Progress)
-
+export const progressDialog = new ComfyCloudPopover(Progress)
+//progressDialog.show();
 
 export async function onGeneration() {
   try {
