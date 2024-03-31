@@ -23,6 +23,8 @@ from .upload import upload_file_specs
 from .upload.spec import FileSpecContextManager
 from .upload.blob import progress
 
+from .paths import build_paths
+
 task_status = {}
 
 
@@ -197,29 +199,27 @@ async def upload_task_execution(task_id, file_specs, workflow_id):
         task_status[task_id] = {"status": f"Task failed", "message": str(e)}
 
 
+
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
 async def upload_dependencies(request):
     # Make a request to localhost
     try:
         json_data = await request.json()
-
-        #endpoint = json_data["endpoint"]
         workflow_id = json_data["workflow_id"]
-
-        # dependencies
-        models_dep = json_data["modelsToUpload"]
-        nodes_dep = json_data["nodesToUpload"]
-        files = json_data["filesToUpload"]
+        base = folder_paths.base_path
 
         # Paths
-        base = folder_paths.base_path
-        models_dir = os.path.join(base, "models")
-        custom_nodes_dir = os.path.join(base, "custom_nodes")
-        # Paths - for searching through /model subfolders
-        paths = copy.deepcopy(folder_paths.folder_names_and_paths)
-        paths.pop("custom_nodes", None)
-        paths.pop("configs", None)
-
+        paths_to_upload = {
+            "models": os.path.join(base, "models"),
+            "custom_nodes": os.path.join(base, "custom_nodes"),
+            "input": os.path.join(base, "input")
+        }
+        dep_lists = {
+            "models": json_data["modelsToUpload"]
+            "custom_nodes": json_data["nodesToUpload"]
+            "input": json_data["filesToUpload"]
+        }
+        
         # Create upload task
         task_id = str(uuid.uuid4())
         task_status[task_id] = {"status": "Task started", "message": None}
@@ -229,52 +229,25 @@ async def upload_dependencies(request):
         # Loop through all dependent custom nodes and patch.
         update_dependencies()
 
-        # Upload code
+        # Get dependency paths
+        paths = build_paths(paths_to_upload, dep_lists, workflow_id)
+
+        # Generate file specs for upload
         file_specs = []
-
-        # Add files
         with FileSpecContextManager(file_specs) as batch:
-            # Upload models
-            for name in models_dep:
-                found = False
-                for base_dir in paths.keys():
-                    if name in folder_paths.get_filename_list(base_dir):
-                        model_path = os.path.join(models_dir, base_dir, name)
-                        if os.path.exists(model_path):
-                            found = True
-                            batch.put_file(model_path, f"/vol/{workflow_id}/comfyui/models/{base_dir}/{name}")
-
-                # Handle model not found
-                # We have to do this because the code for finding
-                # models need to go through each sub folder inside
-                # /models. 
-                # The models folder is comprised of subfolders such
-                # as checkpoints, controlnets, loras, etc
-                if found is False:
-                    raise Exception(f"Required model {name} was not found in your ComfyUI/models folder. Make sure you do not have extra_paths.yaml enabled")
-
-            # Upload custom nodes
-            for name in nodes_dep:
-                # check filepath exists
-                p = os.path.join(custom_nodes_dir, name)
-                print("PATH",p)
-                if not os.path.exists(p):
-                    raise Exception(f"Required node {name} was not found in your ComfyUI/custom_nodes folder. Make sure you do not have extra_paths.yaml enabled")
-
-                batch.put_directory(p, f"/vol/{workflow_id}/comfyui/custom_nodes/{name}")
-
-            # Upload input files
-            for filename in files:
-                input_file_path = os.path.join(input_dir, filename)
-                if os.path.exists(input_file_path):
-                    batch.put_file(input_file_path, f"/vol/{workflow_id}/comfyui/input/{filename}")
+            for path in paths:
+                local_path = path[0]
+                remote_path = path[1]
+                if os.path.isfile(local_path):
+                    batch.put_file(local_path, remote_path)
+                if os.path.isdir(local_path):
+                    batch.put_directory(local_path, remote_path)
                 else:
-                    raise Exception(f"Input '{path}' does not exist.")
+                    raise Exception("Something went wrong")
 
-            # Create file specs for upload
             file_specs = batch.generate_specs()
 
-        # Queue upload task in background
+        # Finally, we queue upload task in background
         asyncio.ensure_future(upload_task_execution(task_id, file_specs, workflow_id))
 
         return web.json_response({'success': True, 'task_id': task_id}, content_type='application/json')
