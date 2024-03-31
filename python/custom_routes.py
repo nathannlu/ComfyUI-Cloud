@@ -215,8 +215,8 @@ async def upload_dependencies(request):
             "input": os.path.join(base, "input")
         }
         dep_lists = {
-            "models": json_data["modelsToUpload"]
-            "custom_nodes": json_data["nodesToUpload"]
+            "models": json_data["modelsToUpload"],
+            "custom_nodes": json_data["nodesToUpload"],
             "input": json_data["filesToUpload"]
         }
         
