@@ -8,9 +8,12 @@ def _search_dependency_paths(root_dir, name):
     - names is a list of filenames or folder names
     """
     for dirpath, dirnames, filenames in os.walk(root_dir):
-        if name in filenames or name in dirnames:
-            relative_path = os.path.relpath(dirpath, root_dir)
-            return os.path.join(relative_path, name)
+
+        relative_path = os.path.relpath(dirpath, root_dir)
+        potential_path = os.path.normpath(os.path.join(root_dir, relative_path, name))
+
+        if os.path.exists(potential_path):
+            return os.path.normpath(os.path.join(relative_path, name))
 
     raise Exception(f"Required {name} was not found in {root_dir} folder. Make sure you do not have extra_paths.yaml enabled")
 

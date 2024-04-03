@@ -23,11 +23,12 @@ def create_test_files():
     subprocess.run(create_temp)
 
     # Make fake models dir
-    directories = ["models", "input", "custom_nodes", "custom_nodes/ComfyUI-AnimateDiffEvolved",  "models/checkpoints", "models/controlnet", "models/vae"]
+    directories = ["models", "input", "custom_nodes", "custom_nodes/ComfyUI-AnimateDiffEvolved",  "models/checkpoints", "models/checkpoints/segm", "models/controlnet", "models/vae"]
     for directory in directories:
         os.makedirs(os.path.join(_temp_dir, directory), exist_ok=True)
 
     Path(os.path.join(_temp_dir, "models/checkpoints", "test_checkpoint")).touch()
+    Path(os.path.join(_temp_dir, "models/checkpoints/segm", "segm_test")).touch()
     Path(os.path.join(_temp_dir, "models/controlnet", "test_controlnet")).touch()
     Path(os.path.join(_temp_dir, "custom_nodes/ComfyUI-AnimateDiffEvolved", "__init__.py")).touch()
     Path(os.path.join(_temp_dir, "input", "test_input1")).touch()
@@ -48,7 +49,7 @@ def can_find_paths():
             "input": os.path.join(base, "input")
         }
         dep_lists = {
-            "models": ["test_checkpoint", "test_controlnet"],
+            "models": ["segm/segm_test", "test_controlnet"],
             "custom_nodes": ["ComfyUI-AnimateDiffEvolved"],
             "input": ["test_input1"]
         }
