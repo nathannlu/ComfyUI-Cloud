@@ -245,6 +245,7 @@ async def upload_dependencies(request):
                 else:
                     raise Exception("Something went wrong")
 
+            print("Generating specs")
             file_specs = batch.generate_specs()
 
         # Finally, we queue upload task in background

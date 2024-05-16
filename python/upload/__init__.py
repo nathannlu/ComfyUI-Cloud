@@ -25,6 +25,8 @@ async def upload_file_specs(file_specs: List[FileUploadSpec], workflow_id: str):
     for idx, spec in enumerate(serialized_specs):
         spec["id"] = idx
         serialized_specs_dict[idx] = spec
+
+    print("Uploading dependencies to cloud.")
         
     # Get a list of blob_ids from the client
     url = f'{base_url}/upload-urls'
@@ -52,11 +54,10 @@ async def upload_file_specs(file_specs: List[FileUploadSpec], workflow_id: str):
         # Blob upload has finished. Put the spec
         # on the queue to be committed
         url = f'{base_url}/commit'
-        print("Sending commit")
         response_data = await make_post_request(url, { "spec": spec })
 
     files_stream = aiostream.stream.iterate(gen_upload_providers())
     uploads_stream = aiostream.stream.map(files_stream, _upload_and_commit, task_limit=20)
     files = await aiostream.stream.list(uploads_stream)
-    print("done")
+    print("Successfully uploaded dependent models and custom nodes to cloud.")
 

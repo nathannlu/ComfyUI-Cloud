@@ -28,7 +28,7 @@ import aiostream
 import zlib
 from .sync import synchronize_api
 from .blob import LARGE_FILE_LIMIT
-from .hash import get_sha256_hex, get_upload_hashes
+from .hash import get_sha256_hex, get_upload_hashes, UploadHashes
 
 def get_content_length(data: BinaryIO):
     # *Remaining* length of file from current seek position
@@ -49,6 +49,7 @@ class FileUploadSpec:
     sha256_hex: str
     mode: int  # file permission bits (last 12 bits of st_mode)
     size: int
+    upload_hashes: UploadHashes
 
 # Example usage:
 
@@ -65,7 +66,10 @@ def _get_file_upload_spec(
         # Hotfix - cannot send bytes over http
         use_blob = True
         content = None
-        sha256_hex = get_sha256_hex(fp)
+
+        print(source_description)
+        #sha256_hex = get_sha256_hex(fp)
+        upload_hashes, sha256_hex = get_upload_hashes(fp)
 
         """
         if size >= LARGE_FILE_LIMIT:
@@ -85,6 +89,7 @@ def _get_file_upload_spec(
         use_blob=use_blob,
         content=content,
         sha256_hex=sha256_hex,
+        upload_hashes=upload_hashes,
         mode=mode & 0o7777,
         size=size,
     )
@@ -129,14 +134,14 @@ def serialize_spec(spec: FileUploadSpec) -> Dict[Any, Any]:
 
 
     with spec.source() as data:
-        upload_hashes = get_upload_hashes(data)
+        upload_hashes = obj["upload_hashes"].__dict__
 
         if isinstance(data, bytes):
             data = io.BytesIO(data)
         
         content_length = get_content_length(data)
 
-        obj["upload_hashes"] = upload_hashes.__dict__
+        obj["upload_hashes"] = upload_hashes
         obj["content_length"] = content_length
         del obj["source"]
 
