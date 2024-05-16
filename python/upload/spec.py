@@ -67,9 +67,8 @@ def _get_file_upload_spec(
         use_blob = True
         content = None
 
-        print(source_description)
         #sha256_hex = get_sha256_hex(fp)
-        upload_hashes, sha256_hex = get_upload_hashes(fp)
+        upload_hashes, sha256_hex = get_upload_hashes(fp, source_description)
 
         """
         if size >= LARGE_FILE_LIMIT:

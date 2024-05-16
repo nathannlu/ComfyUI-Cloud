@@ -18,7 +18,8 @@ from tqdm import tqdm
 import logging
 import uuid
 
-progress = {}
+#progress = {}
+from .progress import progress_update
 
 logger = logging.getLogger()
 
@@ -116,14 +117,17 @@ class BytesIOSegmentPayload(BytesIOPayload):
             await writer.write(chunk)
 
     def remaining_bytes(self):
-        #print("Remaining bytes", self.filename, self.segment_length - self.num_bytes_read)
+        """
+        print("Remaining bytes", self.filename, self.segment_length - self.num_bytes_read)
         if self.filename not in progress:
             progress[self.filename] = {}
         
         progress[self.filename]["value"] = self.segment_length - self.num_bytes_read
         if "max" not in progress[self.filename]:
             progress[self.filename]["max"] = self.segment_length - self.num_bytes_read
+        """
 
+        progress_update(filename=self.filename, value=self.segment_length - self.num_bytes_read, max=self.segment_length)
         return self.segment_length - self.num_bytes_read
 
 

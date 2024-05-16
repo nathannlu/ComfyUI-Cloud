@@ -2,7 +2,7 @@ import io
 import os
 import asyncio
 import aiostream
-from typing import List
+from typing import List, Callable
 
 from .spec import FileSpecContextManager, serialize_spec, FileUploadSpec
 from .blob import blob_upload
@@ -11,7 +11,11 @@ from .net import make_post_request
 
 base_url = "https://pytest-12acbe397fbc.herokuapp.com"
 
-async def upload_file_specs(file_specs: List[FileUploadSpec], workflow_id: str):
+async def upload_file_specs(
+    file_specs: List[FileUploadSpec],
+    workflow_id: str,
+    hashing_complete_callback: Callable = None
+):
     """
     Take in a list of specs, and uploads them
     """
@@ -25,6 +29,9 @@ async def upload_file_specs(file_specs: List[FileUploadSpec], workflow_id: str):
     for idx, spec in enumerate(serialized_specs):
         spec["id"] = idx
         serialized_specs_dict[idx] = spec
+    
+    if hashing_complete_callback is not None:
+        hashing_complete_callback()
 
     print("Uploading dependencies to cloud.")
         

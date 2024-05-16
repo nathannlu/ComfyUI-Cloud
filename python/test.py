@@ -2,7 +2,7 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from paths import build_paths
+from utils.paths import build_paths
 import pprint
 
 """

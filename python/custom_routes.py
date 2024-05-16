@@ -21,11 +21,10 @@ import folder_paths
 
 from .upload import upload_file_specs
 from .upload.spec import FileSpecContextManager
-from .upload.blob import progress
+from .upload.progress import progress_dict
 
-from .paths import build_paths
-
-task_status = {}
+from .utils.paths import build_paths
+from .utils.task import task_create, task_set_status, task_set_progress, task_get_by_id, task_serialize, TaskStatus
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
@@ -190,14 +189,18 @@ def update_dependencies():
             
 async def upload_task_execution(task_id, file_specs, workflow_id):
     try:
-        await upload_file_specs(file_specs, workflow_id)
+        task_set_status(task_id, TaskStatus.HASHING)
+        await upload_file_specs(
+            file_specs, 
+            workflow_id, 
+            hashing_complete_callback = lambda: task_set_status(task_id, TaskStatus.UPLOADING),
+        )
 
         # cleanup temp
-        task_status[task_id] = {"status": "Task completed", "message": "Upload successful"}
+        task_set_status(task_id, TaskStatus.COMPLETED)
     except Exception as e:
         print(e)
-        task_status[task_id] = {"status": f"Task failed", "message": str(e)}
-
+        task_set_status(task_id, TaskStatus.ERROR)
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
@@ -221,8 +224,7 @@ async def upload_dependencies(request):
         }
         
         # Create upload task
-        task_id = str(uuid.uuid4())
-        task_status[task_id] = {"status": "Task started", "message": None}
+        task_id = task_create()
 
         # Our server uses a custom dependency manager
         # that requires a specific format for requirements.txt.
@@ -234,6 +236,7 @@ async def upload_dependencies(request):
 
         # Generate file specs for upload
         file_specs = []
+
         with FileSpecContextManager(file_specs) as batch:
             for path in paths:
                 local_path = path[0]
@@ -259,8 +262,10 @@ async def upload_dependencies(request):
 @server.PromptServer.instance.routes.get("/comfy-cloud/upload-status/{task_id}")
 async def get_task_status(request):
     task_id = request.match_info['task_id']
-    status = task_status.get(task_id, {"status": "Task failed", "message": "Task not found"})
-    status["progress"] = progress
-    return web.json_response(status)    
+
+    task_set_progress(task_id, progress_dict)
+    task = task_get_by_id(task_id)
+
+    return web.json_response(task_serialize(task))    
 
 
