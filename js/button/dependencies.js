@@ -15,6 +15,13 @@ const isModelExtension = z => z.endsWith('.safetensors') ||
                               z.endsWith('.bin') ||
                               z.endsWith('.ckpt')
 
+const isDirectory = async (path) => {
+  const { exists } = await local.validatePathDirectory({ 
+    path
+  })
+  return exists;
+}
+
 
 // Loops over different nodes, and
 // finds paths that ends in 
@@ -63,7 +70,7 @@ export const resolveDependencies = async (diff) => {
         if (isInputValuePotentialPath) {
 
           // Handle VHS video extensions
-          if (isVideoExtension(z)) {
+          if (isVideoExtension(z) || await isDirectory(z)) {
             const filename = extractFilename(z)
             filesToUpload.push(filename)
             
@@ -102,11 +109,11 @@ export const resolveDependencies = async (diff) => {
   // it is in the /input folder. 
   // Right now we only can upload files that is inside
   // ComfyUI's /input folder.
-  const invalid = await local.validatePaths({ 
+  const { invalid_paths } = await local.validatePaths({ 
     paths: filesToUpload
   })
-  if(invalid.length > 0){
-    throw new Error("Got invalid input paths")
+  if(invalid_paths.length > 0){
+    throw new Error("Make sure the following file/folder names are inside your ComfyUI /input folder: " + invalid_paths.join(", "))
   }
 
   return {
@@ -151,8 +158,15 @@ export const pollSyncDependencies = async (taskId) => {
 
 
 function extractFilename(filepath) {
+  let _filepath = filepath;
+  const isDirectory = filepath.endsWith('/')
+  if (isDirectory) {
+    // remove the extra slash at the end
+    _filepath = filepath.slice(0, -1);
+  }
+
   // Split the filepath by '/'
-  const parts = filepath.split('/');
+  const parts = _filepath.split('/');
   // Take the last part which represents the filename
   const filename = parts[parts.length - 1];
   return filename;

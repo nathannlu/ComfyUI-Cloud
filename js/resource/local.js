@@ -35,6 +35,11 @@ const local = {
   validatePaths: {
     method: "POST",
     path: "/comfy-cloud/validate-input-path"
+  },
+
+  validatePathDirectory: {
+    method: "POST",
+    path: "/comfy-cloud/validate-path"
   }
 }
 
