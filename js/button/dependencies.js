@@ -119,10 +119,18 @@ export const resolveDependencies = async (diff) => {
   }
 }
 
+
+export const pollSyncDependenciesStatus = {
+  STARTED: 'Started',
+  COMPLETED: 'Completed',
+  HASHING: 'Hashing',
+  UPLOADING: 'Uploading',
+  ERROR: 'Failed',
+}
 export const pollSyncDependencies = async (taskId) => {
   let status = '';
   let statusMessage = '';
-  while (status !== 'Task completed' && status !== 'Task failed') {
+  while (status !== pollSyncDependenciesStatus.COMPLETED && status !== pollSyncDependenciesStatus.ERROR) {
     await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second before the next poll
 
     try {
@@ -136,7 +144,7 @@ export const pollSyncDependencies = async (taskId) => {
     }
   }
 
-  if (status == "Task failed") {
+  if (status == pollSyncDependenciesStatus.ERROR) {
     throw new Error(statusMessage || "Failed to upload")
   }
 }

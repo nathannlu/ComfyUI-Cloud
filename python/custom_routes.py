@@ -7,7 +7,6 @@ import uuid
 import time
 import traceback
 import random
-import re
 import requests
 import importlib
 import sys
@@ -21,10 +20,12 @@ import folder_paths
 
 from .upload import upload_file_specs
 from .upload.spec import FileSpecContextManager
-from .upload.progress import progress_dict
+from .upload.progress import progress_dict, reset_progress
 
 from .utils.paths import build_paths
 from .utils.task import task_create, task_set_status, task_set_progress, task_get_by_id, task_serialize, TaskStatus
+
+from .utils.requirements import update_requirements
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
@@ -148,44 +149,6 @@ def load_custom_node(module_path, ignore=set()):
         print(f"Cannot import {module_path} module for custom nodes:", e)
         return (module_name, [])
 
-def update_dependencies():
-    """
-    Formats requirements.txt
-    """
-
-    base = folder_paths.base_path
-    custom_nodes_dir = os.path.join(base, "custom_nodes")
-
-    # Loop over the files in the specified directory
-    for custom_node in os.listdir(custom_nodes_dir):
-        filepath = os.path.join(custom_nodes_dir, custom_node, "requirements.txt")
-        
-        # Check if the file is a requirements.txt file
-        if os.path.exists(filepath):
- 
-            # Read the content of the requirements.txt file
-            with open(filepath, 'r') as file:
-                lines = file.readlines()
-            
-            # Update dependencies in the file content
-            updated_lines = []
-            for line in lines:
-              # Check if the line contains a git dependency without the specified format
-                match_git = re.match(r'^\s*git\+https://.*?/([^/]+)\.git', line)
-                match_git_plus = re.match(r'^\s*git\+https://.*?/([^/]+)$', line)
-                
-                if match_git:
-                    package_name = match_git.group(1)
-                    updated_lines.append(f"{package_name} @ {line.strip()}\n")
-                elif match_git_plus:
-                    package_name = match_git_plus.group(1).strip()
-                    updated_lines.append(f"{package_name} @ {line.strip()}\n")
-                else:
-                    updated_lines.append(line)
-            
-            # Write the updated content back to the requirements.txt file
-            with open(filepath, 'w') as file:
-                file.writelines(updated_lines)
             
 async def upload_task_execution(task_id, file_specs, workflow_id):
     try:
@@ -201,6 +164,9 @@ async def upload_task_execution(task_id, file_specs, workflow_id):
     except Exception as e:
         print(e)
         task_set_status(task_id, TaskStatus.ERROR)
+
+    finally:
+        reset_progress(progress_dict)
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/upload")
@@ -229,7 +195,7 @@ async def upload_dependencies(request):
         # Our server uses a custom dependency manager
         # that requires a specific format for requirements.txt.
         # Loop through all dependent custom nodes and patch.
-        update_dependencies()
+        update_requirements()
 
         # Get dependency paths
         paths = build_paths(paths_to_upload, dep_lists, workflow_id)

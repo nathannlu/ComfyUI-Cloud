@@ -1,46 +1,73 @@
 import { ComfyDialog, $el } from './comfy.js';
 import { getData, setData } from '../store.js';
-import { headerHtml } from '../ui/html.js';
+import { headerHtml, chevronUpIcon } from '../ui/html.js';
 import van from '../lib/van.js';
 
 export class ComfyCloudPopover extends ComfyDialog {
   container = null;
 
-  constructor(ui) {
+  constructor(ui, title = "") {
     super();
 
     this.element.classList.add("comfy-normal-modal");
     this.element.style.padding = "16px";
     this.element.style.overflowY = "auto";
-
-    this.container = document.createElement("div");
-    this.container.style.color = "white";
-
-    this.header = document.createElement("div");
-    this.header.innerHTML = headerHtml
-    this.element.querySelector(".comfy-modal-content").prepend(this.container);
-    //this.element.querySelector(".comfy-modal-content").prepend(this.header);
     this.element.style.top = "24px";
     this.element.style.left = "14px";
     this.element.style.transform = "none";
 
+    // hotfix: set all p elements inside this.element to have 0 margin
+    this.element.querySelectorAll("p").forEach((p) => {
+      p.style.margin = "0";
+    });
+
+
+    // Title
+    this.title = document.createElement("div");
+    this.title.style.fontSize = "18px";
+    this.title.style.fontWeight = "bold";
+    this.title.style.color = "white";
+    this.title.innerHTML = title;
+
+    // Collapse button
+    this.collapsed = false;
+    this.collapseButton = document.createElement("button");
+    this.collapseButton.style.width = "36px";
+    this.collapseButton.innerHTML = chevronUpIcon;
+    this.collapseButton.onclick = () => { 
+      this.collapsed = !this.collapsed;
+      this.component.style.height = this.collapsed ? "0" : "auto";
+      this.collapseButton.style.transform = this.collapsed ? "rotate(180deg)" : "rotate(0deg)";
+    }
+
+    // Title + collapse button wrapper
+    this.header = document.createElement("div");
+    this.header.style.display = "flex";
+    this.header.style.alignItems = "center";
+    this.header.style.justifyContent = "space-between";
+    this.header.style.gap = "8px";
+    this.header.append(this.title);
+    this.header.append(this.collapseButton);
+
+
+    // VanJS content
+    this.container = document.createElement("div");
+    this.container.style.color = "white";
+    this.container.style.overflow = "hidden";
+
     this.component = null;
     this.ui = ui
+
+
+    this.element.querySelector(".comfy-modal-content").prepend(this.container);
+    this.element.querySelector(".comfy-modal-content").prepend(this.header);
   }
 
   createButtons() {
     return [
       $el(
         "div",
-        [
-          /*
-          $el("button", {
-            type: "button",
-            textContent: "Close",
-            onclick: () => this.close(),
-          }),
-          */
-        ],
+        [],
       ),
     ];
   }

@@ -17,6 +17,8 @@ def progress_update(filename, value, max):
     progress_dict[filename] = progress
 
 
+def reset_progress(progress_dict):
+    progress_dict = {}
 
 
 

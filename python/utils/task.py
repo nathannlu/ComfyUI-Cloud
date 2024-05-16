@@ -4,11 +4,11 @@ from enum import Enum
 from typing import Any, Dict
 
 class TaskStatus(Enum):
-    STARTED = "Task started"
-    COMPLETED = "Task completed"
-    HASHING = "Task hashing"
-    UPLOADING = "Task uploading"
-    ERROR = "Task failed"
+    STARTED = "Started"
+    COMPLETED = "Completed"
+    HASHING = "Hashing"
+    UPLOADING = "Uploading"
+    ERROR = "Failed"
 
 @dataclasses.dataclass
 class Task:
