@@ -2,6 +2,7 @@ import io
 import os
 import asyncio
 import aiostream
+import json
 from typing import List, Callable
 
 from .spec import FileSpecContextManager, serialize_spec, FileUploadSpec
@@ -29,7 +30,14 @@ async def upload_file_specs(
     for idx, spec in enumerate(serialized_specs):
         spec["id"] = idx
         serialized_specs_dict[idx] = spec
-    
+
+    # Check serialized specs
+    max_size = 50 * 1024 * 1024  # 50 MB in bytes
+    json_data = json.dumps(serialized_specs)
+    json_size = len(json_data.encode('utf-8'))
+    if json_size > max_size:
+        raise Exception(f'Workflow too large error. File specs size exceeds the 50MB limit: {data_size} bytes')
+        
     if hashing_complete_callback is not None:
         hashing_complete_callback()
 
@@ -39,7 +47,6 @@ async def upload_file_specs(
     url = f'{base_url}/upload-urls'
     response_data = await make_post_request(url, { "specs": serialized_specs, "workflow_id": workflow_id })
     upload_data = response_data["data"]
-
 
     # Create the upload data
     # Mix the response data from the server and the file spec

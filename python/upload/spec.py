@@ -282,6 +282,10 @@ class _FileSpecContextManager:
         def gen():
             glob = local_path.rglob("*") if recursive else local_path.glob("*")
             for subpath in glob:
+                # skip if subpath contains .git or __pycache__
+                if ".git" in subpath.parts or "__pycache__" in subpath.parts:
+                    continue
+
                 # Skip directories and unsupported file types (e.g. block devices)
                 if subpath.is_file():
                     yield create_file_spec_provider(subpath)

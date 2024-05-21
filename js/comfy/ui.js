@@ -22,6 +22,12 @@ export class ComfyCloudPopover extends ComfyDialog {
     });
 
 
+    // VanJS content
+    this.container = document.createElement("div");
+    this.container.style.color = "white";
+    this.container.style.overflow = "hidden";
+
+
     // Title
     this.title = document.createElement("div");
     this.title.style.fontSize = "18px";
@@ -38,6 +44,8 @@ export class ComfyCloudPopover extends ComfyDialog {
       this.collapsed = !this.collapsed;
       this.component.style.height = this.collapsed ? "0" : "auto";
       this.collapseButton.style.transform = this.collapsed ? "rotate(180deg)" : "rotate(0deg)";
+      this.container.style.overflow = this.collapsed ? "hidden" : "auto";
+      this.container.style.overflowY = this.collapsed ? "hidden" : "scroll";
     }
 
     // Title + collapse button wrapper
@@ -49,11 +57,6 @@ export class ComfyCloudPopover extends ComfyDialog {
     this.header.append(this.title);
     this.header.append(this.collapseButton);
 
-
-    // VanJS content
-    this.container = document.createElement("div");
-    this.container.style.color = "white";
-    this.container.style.overflow = "hidden";
 
     this.component = null;
     this.ui = ui

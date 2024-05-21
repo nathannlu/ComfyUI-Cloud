@@ -28,8 +28,31 @@ const ProgressBar = (progress) => {
 export const taskId = van.state(null)
 export const Progress = (dialogInstance) => {
   
-  const activeTab = van.state(0)
   const data = van.state(local.pollUploadStatus(taskId.val)) // workflowRun data
+
+  const combineCustomNodeData = (data) => {
+    const result = {};
+
+    for (const [path, obj] of Object.entries(data)) {
+      if (path.includes('custom_nodes')) {
+        const parts = path.split('/');
+        const nodeIndex = parts.indexOf('custom_nodes') + 1;
+        const nodePath = parts.slice(0, nodeIndex + 1).join('/');
+
+        if (!result[nodePath]) {
+          result[nodePath] = { "max": 0, "value": 0 };
+        }
+
+        result[nodePath]["max"] += obj["max"];
+        result[nodePath]["value"] += obj["value"];
+
+      } else {
+        result[path] = obj;
+      }
+    }
+
+    return result;
+  }
 
   const start = () => dialogInstance.poll = dialogInstance.poll || setInterval(async () => {
     const res = await local.pollUploadStatus(taskId.val)
@@ -45,12 +68,13 @@ export const Progress = (dialogInstance) => {
       dialogInstance, dialogInstance.poll = 0;
     } 
 
-    data.val = Promise.resolve(res)
-  }, 1000)
+    const formattedData = { ...res, progress: combineCustomNodeData(res.progress)}
+    data.val = Promise.resolve(formattedData)
+  }, 2500)
 
   start()
 
-  return () => van.tags.div({style: 'width: 360px'},
+  return () => div({style: 'width: 360px; overflow-y: scroll; height: 480px;'}, 
     Await({
       value: data.val, 
       container: span,
