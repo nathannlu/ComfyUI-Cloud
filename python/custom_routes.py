@@ -101,11 +101,8 @@ async def comfy_cloud_run(request):
 
 @server.PromptServer.instance.routes.get("/comfy-cloud/custom-nodes-list")
 async def get_custom_nodes_list(request):
-    #base_node_names = set(NODE_CLASS_MAPPINGS.keys())
-
     custom_nodes = {}
     node_paths = folder_paths.get_folder_paths("custom_nodes")
-    #node_import_times = []
     for custom_node_path in node_paths:
         possible_modules = os.listdir(os.path.realpath(custom_node_path))
         if "__pycache__" in possible_modules:
@@ -115,13 +112,12 @@ async def get_custom_nodes_list(request):
             module_path = os.path.join(custom_node_path, possible_module)
             if os.path.isfile(module_path) and os.path.splitext(module_path)[1] != ".py": continue
             if module_path.endswith(".disabled"): continue
-            #time_before = time.perf_counter()
-            mappings = load_custom_node(module_path) #, base_node_names)
+            mappings = get_custom_node_mappings(module_path)
             custom_nodes[mappings[0]] = mappings[1]
 
     return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
 
-def load_custom_node(module_path, ignore=set()):
+def get_custom_node_mappings(module_path, ignore=set()):
     mappings = []
 
     module_name = os.path.basename(module_path)
@@ -137,24 +133,16 @@ def load_custom_node(module_path, ignore=set()):
             module_dir = module_path
 
         module = importlib.util.module_from_spec(module_spec)
-        sys.modules[module_name] = module
         module_spec.loader.exec_module(module)
 
         if hasattr(module, "NODE_CLASS_MAPPINGS") and getattr(module, "NODE_CLASS_MAPPINGS") is not None:
             for name in module.NODE_CLASS_MAPPINGS:
                 if name not in ignore:
-                    #mappings[name] = module.NODE_CLASS_MAPPINGS[name]
                     mappings.append(name)
-                    #NODE_CLASS_MAPPINGS[name] = module.NODE_CLASS_MAPPINGS[name]
-            """
-            if hasattr(module, "NODE_DISPLAY_NAME_MAPPINGS") and getattr(module, "NODE_DISPLAY_NAME_MAPPINGS") is not None:
-                print(module.NODE_DISPLAY_NAME_MAPPINGS)
-                #NODE_DISPLAY_NAME_MAPPINGS.update(module.NODE_DISPLAY_NAME_MAPPINGS)
-            """
 
             return (module_name, mappings)
         else:
-            #print(f"Skip {module_path} module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.")
+            # Skip module for custom nodes due to the lack of NODE_CLASS_MAPPINGS.
             return (module_name, [])
     except Exception as e:
         print(traceback.format_exc())
@@ -174,7 +162,7 @@ async def upload_task_execution(task_id, file_specs, workflow_id):
         # cleanup temp
         task_set_status(task_id, TaskStatus.COMPLETED)
     except Exception as e:
-        print(e)
+        print("Upload task execution error:", e)
         task_set_status(task_id, TaskStatus.ERROR)
 
     finally:
