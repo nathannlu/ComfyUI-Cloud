@@ -13,7 +13,8 @@ const isModelExtension = z => z.endsWith('.safetensors') ||
                               z.endsWith('.pth') ||
                               z.endsWith('.pt') ||
                               z.endsWith('.bin') ||
-                              z.endsWith('.ckpt')
+                              z.endsWith('.ckpt') ||
+                              z.endsWith('.onnx')
 
 const isDirectory = async (path) => {
   const { exists } = await local.validatePathDirectory({ 
