@@ -5,6 +5,9 @@ import sys
 import atexit
 import threading
 import logging
+import importlib.util
+
+
 from logging.handlers import RotatingFileHandler
 
 # Running with export CD_ENABLE_LOG=true; python main.py
@@ -87,6 +90,12 @@ def pull_latest():
     except Exception as e:
         print("Error:", e)
 
+def check_and_install_packages(package_names):
+    for package_name in package_names:
+        if not importlib.util.find_spec(package_name):
+            print(f"[Comfy Cloud] {package_name} is not installed. Installing...")
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
+
 # Change the current working directory to the script's directory
 script_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(script_dir)
@@ -96,4 +105,7 @@ else:
     print("Comfy Cloud is not up to date. Pulling latest changes...")
     pull_latest()
 
+# Check if requirements is fulfilled
+package_names = ["modal","synchronicity", "aiostream"]
+check_and_install_packages(package_names)
 
