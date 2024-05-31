@@ -45,7 +45,15 @@ export async function onGeneration() {
 
     // check if ComfyCloud meta node exists
     const deployMeta = app.graph.findNodesByType("ComfyCloud");
-    const isNewWorkflow = deployMeta.length == 0
+    let isNewWorkflow = deployMeta.length == 0
+
+    // This case usually happens when user manually adds the ComfyCloud node
+    // and doesn't delete it
+    const hasNoId = !isNewWorkflow && !getWorkflowId()
+    if(hasNoId) {
+      app.graph.remove(deployMeta[0])
+      isNewWorkflow = true
+    }
 
     const localWorkflow = await app.graphToPrompt();
     const isValid = await validatePrompt(localWorkflow.output);
