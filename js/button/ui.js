@@ -115,12 +115,80 @@ export function addInterface() {
   titleElement.style.marginBottom = "10px";
   titleElement.style.fontSize = "14px";
   titleElement.style.textAlign = "center";
+  titleElement.style.display = "flex";
+  titleElement.style.justifyContent = "center";
+  titleElement.style.alignItems = "center";
+
+  const tooltipButton = document.createElement("button");
+  tooltipButton.id = "comfycloud-tooltip-button";
+  tooltipButton.innerText = "?";
+  tooltipButton.style.fontSize = "14px";
+  tooltipButton.style.marginLeft = "10px";
+  tooltipButton.style.borderRadius = "50%";
+  tooltipButton.style.border = "none";
+  tooltipButton.style.backgroundColor = "darkgray";
+  tooltipButton.style.color = "white";
+  tooltipButton.style.width = "20px";
+  tooltipButton.style.height = "20px";
+  tooltipButton.style.display = "flex";
+  tooltipButton.style.justifyContent = "center";
+  tooltipButton.style.alignItems = "center";
+  tooltipButton.style.cursor = "pointer";
+  tooltipButton.style.position = "relative";
+  tooltipButton.onclick = () => {
+    window.open(
+      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+      "_blank"
+    );
+  };
+  tooltipButton.onmouseover = function () {
+    tooltipText.style.visibility = "visible";
+    tooltipText.style.opacity = "1";
+  };
+  tooltipButton.onmouseout = function () {
+    tooltipText.style.visibility = "hidden";
+    tooltipText.style.opacity = "0";
+  };
+
+  const tooltipText = document.createElement("div");
+  tooltipText.id = "comfycloud-tooltip-text";
+  tooltipText.style.visibility = "hidden";
+  tooltipText.style.width = "275px";
+  tooltipText.style.backgroundColor = "#555";
+  tooltipText.style.color = "#fff";
+  tooltipText.style.textAlign = "center";
+  tooltipText.style.borderRadius = "6px";
+  tooltipText.style.paddingInline = "16px";
+  tooltipText.style.position = "absolute";
+  tooltipText.style.zIndex = "1";
+  tooltipText.style.bottom = "125%";
+  tooltipText.style.left = "50%";
+  tooltipText.style.marginLeft = "-315px";
+  tooltipText.style.marginBottom = "-235px";
+  tooltipText.style.opacity = "0";
+  tooltipText.style.transition = "opacity 0.3s";
+  tooltipText.innerHTML = `
+    <div style="text-align: left;">
+      <p>
+        <strong>How to run a cloud workflow:</strong>
+      </p>
+      <ol type="1" style="padding-left: 16px;">
+        <li style="padding-bottom: 5px;">Click "Generate on cloud GPU"</li>
+        <li style="padding-bottom: 5px;">Name your workflow and wait for them to be uploaded. This may take some time.</li>
+        <li style="padding-bottom: 5px;">The ComfyCloud node will automatically be created. Click "View past runs" to see results</li>
+      </ol>
+      <p style="font-size: 10px; color: #aba6a6;">Need more help? Click me to view the docs, or hit us up on Discord!</p>
+    </div>
+  `;
 
   const box = document.createElement("div");
   box.innerHTML = `
   <div id='comfycloud-message'>
   </div>
   `;
+
+  tooltipButton.appendChild(tooltipText);
+  titleElement.appendChild(tooltipButton);
 
   queueButton.after(dividerTop);
   dividerTop.after(titleElement);
