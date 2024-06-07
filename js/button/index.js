@@ -1,2 +1,1 @@
-export { addButton } from './ui.js';
-
+export { addInterface } from "./ui.js";

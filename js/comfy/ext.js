@@ -1,13 +1,13 @@
-import { app } from './comfy.js';
-import { addButton } from '../button/index.js';
-import { endpoint } from '../constants.js';
-import { ComfyCloud } from '../node/index.js';
+import { app } from "./comfy.js";
+import { addInterface } from "../button/index.js";
+import { endpoint } from "../constants.js";
+import { ComfyCloud } from "../node/index.js";
 
 export const ext = {
   name: "nathannlu.ComfyCloud",
   endpoint: endpoint,
   init() {
-    addButton();
+    addInterface();
     addPing();
   },
 
@@ -20,7 +20,7 @@ export const ext = {
         title_mode: LiteGraph.NORMAL_TITLE,
         title: "Comfy Cloud",
         collapsable: true,
-      }),
+      })
     );
 
     ComfyCloud.category = "cloud";
@@ -29,19 +29,12 @@ export const ext = {
 
 app.registerExtension(ext);
 
-
 export async function addPing() {
-  const { user } = await fetch(
-    '/comfy-cloud/user',
-  ).then((x) => x.json())
+  const { user } = await fetch("/comfy-cloud/user").then((x) => x.json());
 
   const userId = user?.id;
 
-  if(userId) {
-    await fetch(
-      `${endpoint}/auth?i=${userId}`
-    ).then((x) => x.json())
+  if (userId) {
+    await fetch(`${endpoint}/auth?i=${userId}`).then((x) => x.json());
   }
 }
-
-
