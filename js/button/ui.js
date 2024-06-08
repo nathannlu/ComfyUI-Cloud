@@ -1,5 +1,7 @@
 import { onGeneration } from "./actions.js";
 import { loadingIcon, cloudIconWhite } from "../ui/html.js";
+import { helpHandler } from "./support.js";
+
 
 /**
  * HTML, UI dialogs, etc
@@ -66,8 +68,9 @@ export function addInterface() {
   supportButton.style.alignItems = "center";
   supportButton.style.justifyContent = "center";
   supportButton.innerHTML = supportButtonHTML;
-  supportButton.onclick = () => {
-    window.open("https://discord.gg/2PTNx3VCYa", "_blank");
+  supportButton.onclick = async () => {
+    helpHandler("support");
+    // window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
   const feedbackButton = document.createElement("button");
@@ -79,8 +82,9 @@ export function addInterface() {
   feedbackButton.style.alignItems = "center";
   feedbackButton.style.justifyContent = "center";
   feedbackButton.innerHTML = feedbackButtonHTML;
-  feedbackButton.onclick = () => {
-    window.open("https://discord.gg/2PTNx3VCYa", "_blank");
+  feedbackButton.onclick = async () => {
+    helpHandler("feedback");
+    // window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
   const docsButton = document.createElement("button");
@@ -93,10 +97,11 @@ export function addInterface() {
   docsButton.style.justifyContent = "center";
   docsButton.innerHTML = docsButtonHTML;
   docsButton.onclick = () => {
-    window.open(
-      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
-      "_blank"
-    );
+    helpHandler("docs");
+    // window.open(
+    //   "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+    //   "_blank"
+    // );
   };
 
   const dividerTop = document.createElement("hr");
@@ -136,12 +141,14 @@ export function addInterface() {
   tooltipButton.style.cursor = "pointer";
   tooltipButton.style.position = "relative";
   tooltipButton.onclick = () => {
-    window.open(
-      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
-      "_blank"
-    );
+    helpHandler("tooltipDocs");
+    // window.open(
+    //   "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+    //   "_blank"
+    // );
   };
   tooltipButton.onmouseover = function () {
+    helpHandler("tooltipHover");
     tooltipText.style.visibility = "visible";
     tooltipText.style.opacity = "1";
   };
@@ -153,7 +160,7 @@ export function addInterface() {
   const tooltipText = document.createElement("div");
   tooltipText.id = "comfycloud-tooltip-text";
   tooltipText.style.visibility = "hidden";
-  tooltipText.style.width = "275px";
+  tooltipText.style.width = "250px";
   tooltipText.style.backgroundColor = "#555";
   tooltipText.style.color = "#fff";
   tooltipText.style.textAlign = "center";
@@ -163,8 +170,8 @@ export function addInterface() {
   tooltipText.style.zIndex = "1";
   tooltipText.style.bottom = "125%";
   tooltipText.style.left = "50%";
-  tooltipText.style.marginLeft = "-315px";
-  tooltipText.style.marginBottom = "-235px";
+  tooltipText.style.marginLeft = "-290px";
+  tooltipText.style.marginBottom = "-220px";
   tooltipText.style.opacity = "0";
   tooltipText.style.transition = "opacity 0.3s";
   tooltipText.innerHTML = `
@@ -173,9 +180,9 @@ export function addInterface() {
         <strong>How to run a cloud workflow:</strong>
       </p>
       <ol type="1" style="padding-left: 16px;">
-        <li style="padding-bottom: 5px;">Click "Generate on cloud GPU"</li>
-        <li style="padding-bottom: 5px;">Name your workflow and wait for them to be uploaded. This may take some time.</li>
-        <li style="padding-bottom: 5px;">The ComfyCloud node will automatically be created. Click "View past runs" to see results</li>
+        <li style="padding-bottom: 8px;">Click "Generate on cloud GPU"</li>
+        <li style="padding-bottom: 8px;">Name your workflow and wait for it to be uploaded.</li>
+        <li style="padding-bottom: 8px;">Your workflow will be automatically executed.</li>
       </ol>
       <p style="font-size: 10px; color: #aba6a6;">Need more help? Click me to view the docs, or hit us up on Discord!</p>
     </div>

@@ -62,12 +62,36 @@ const auth = {
   }
 }
 
+const support = {
+  feedback: {
+    method: "POST",
+    path: "/support/feedback"
+  },
+  support: {
+    method: "POST",
+    path: "/support/support"
+  },
+  docs: {
+    method: "POST",
+    path: "/support/docs"
+  },
+  tooltipHover: {
+    method: "POST",
+    path: "/support/tooltipHover"
+  },
+  tooltipDocs: {
+    method: "POST",
+    path: "/support/tooltipDocs"
+  }
+}
+
 
 export const apiEndpoints = {
   workflowRun,
   workflow,
   billing,
   auth,
+  support
 }
 
 
