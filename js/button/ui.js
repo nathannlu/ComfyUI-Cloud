@@ -70,7 +70,7 @@ export function addInterface() {
   supportButton.innerHTML = supportButtonHTML;
   supportButton.onclick = async () => {
     helpHandler("support");
-    // window.open("https://discord.gg/2PTNx3VCYa", "_blank");
+    window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
   const feedbackButton = document.createElement("button");
@@ -84,7 +84,7 @@ export function addInterface() {
   feedbackButton.innerHTML = feedbackButtonHTML;
   feedbackButton.onclick = async () => {
     helpHandler("feedback");
-    // window.open("https://discord.gg/2PTNx3VCYa", "_blank");
+    window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
   const docsButton = document.createElement("button");
@@ -98,10 +98,10 @@ export function addInterface() {
   docsButton.innerHTML = docsButtonHTML;
   docsButton.onclick = () => {
     helpHandler("docs");
-    // window.open(
-    //   "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
-    //   "_blank"
-    // );
+    window.open(
+      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+      "_blank"
+    );
   };
 
   const dividerTop = document.createElement("hr");
@@ -142,10 +142,10 @@ export function addInterface() {
   tooltipButton.style.position = "relative";
   tooltipButton.onclick = () => {
     helpHandler("tooltipDocs");
-    // window.open(
-    //   "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
-    //   "_blank"
-    // );
+    window.open(
+      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+      "_blank"
+    );
   };
   tooltipButton.onmouseover = function () {
     helpHandler("tooltipHover");
