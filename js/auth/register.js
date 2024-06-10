@@ -36,7 +36,7 @@ const registerUser = async ({email, password, confirmPassword}, dialogInstance) 
 
 export const Register = (dialogInstance, activeTab) => {
   const schema = {
-    title: "Sign up for an account",
+    title: "Get 150 credits for free by signing up",
     fields: {
       email: {
         label: "Email",
@@ -65,6 +65,9 @@ export const Register = (dialogInstance, activeTab) => {
     generateForm(schema, dialogInstance),
     p({style: "color: #eee; text-align: center; margin-top: 20px; cursor: pointer;"},
       a({onclick: () => activeTab.val = 0}, "Already have an account? Click here to Log in")
+    ),
+    p({style: "color: #808080; text-align: center; margin-top: 18px;"},
+      "All workflows are private and secured"
     )
   );
 }
