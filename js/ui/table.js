@@ -1,7 +1,7 @@
 import van from '../lib/van.js';
 import {Await} from '../lib/van-ui.js';
 import { nimbus } from '../resource/index.js';
-import { formatTimestamp, formatDuration } from '../utils.js';
+import { formatTimestamp, formatDuration, compareDates } from '../utils.js';
 
 const {div, table, th, tr, td, tbody, thead, span } = van.tags
 
@@ -30,7 +30,7 @@ export const WorkflowRunsTable = (activeTab, runId) => {
           ),
 
           tbody({style: "padding: 0 10px"}, 
-            workflow.runs.map((run,i) => 
+            workflow.runs.sort(compareDates).map((run,i) => 
               tr({onclick: () => (activeTab.val = 1, runId.val = run.id), style: "border-bottom: 1px solid #ddd; cursor: pointer;"},
                 [i,formatTimestamp(run.created_at), formatDuration(run.duration), run.status].map(item =>
                   td({style: "padding: 12px;"}, item)

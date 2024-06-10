@@ -131,7 +131,7 @@ export function addInterface() {
   tooltipButton.style.marginLeft = "10px";
   tooltipButton.style.borderRadius = "50%";
   tooltipButton.style.border = "none";
-  tooltipButton.style.backgroundColor = "darkgray";
+  tooltipButton.style.backgroundColor = "#b5b5b5";
   tooltipButton.style.color = "white";
   tooltipButton.style.width = "20px";
   tooltipButton.style.height = "20px";
@@ -203,15 +203,15 @@ export function addInterface() {
   cloudInference.after(feedbackButton);
   feedbackButton.after(supportButton);
   supportButton.after(docsButton);
-  docsButton.after(dividerBottom);
-  dividerBottom.after(box);
+  docsButton.after(box);
+  box.after(dividerBottom);
 }
 
 export const setButtonLoading = () => {
   const menu = document.querySelector(".comfy-menu");
   const btn = menu.querySelector("#comfycloud-gpu-button");
   btn.innerHTML = cloudButtonLoadingHTML;
-  btn.style.color = "#000";
+  btn.style.color = "#ddd";
   btn.disabled = true;
 };
 

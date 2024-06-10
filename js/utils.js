@@ -32,6 +32,10 @@ export function formatDuration(seconds) {
   }
 }
 
+export const compareDates = (a, b) => {
+  return b.date - a.date; // Sort in descending order (most recent to least recent)
+};
+
 
 export function generateUUID() {
   let uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
