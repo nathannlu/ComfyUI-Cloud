@@ -1,5 +1,7 @@
 import { onGeneration } from "./actions.js";
 import { loadingIcon, cloudIconWhite } from "../ui/html.js";
+import { helpHandler } from "./support.js";
+
 
 /**
  * HTML, UI dialogs, etc
@@ -66,7 +68,8 @@ export function addInterface() {
   supportButton.style.alignItems = "center";
   supportButton.style.justifyContent = "center";
   supportButton.innerHTML = supportButtonHTML;
-  supportButton.onclick = () => {
+  supportButton.onclick = async () => {
+    helpHandler("support");
     window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
@@ -79,7 +82,8 @@ export function addInterface() {
   feedbackButton.style.alignItems = "center";
   feedbackButton.style.justifyContent = "center";
   feedbackButton.innerHTML = feedbackButtonHTML;
-  feedbackButton.onclick = () => {
+  feedbackButton.onclick = async () => {
+    helpHandler("feedback");
     window.open("https://discord.gg/2PTNx3VCYa", "_blank");
   };
 
@@ -93,6 +97,7 @@ export function addInterface() {
   docsButton.style.justifyContent = "center";
   docsButton.innerHTML = docsButtonHTML;
   docsButton.onclick = () => {
+    helpHandler("docs");
     window.open(
       "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
       "_blank"
@@ -115,12 +120,82 @@ export function addInterface() {
   titleElement.style.marginBottom = "10px";
   titleElement.style.fontSize = "14px";
   titleElement.style.textAlign = "center";
+  titleElement.style.display = "flex";
+  titleElement.style.justifyContent = "center";
+  titleElement.style.alignItems = "center";
+
+  const tooltipButton = document.createElement("button");
+  tooltipButton.id = "comfycloud-tooltip-button";
+  tooltipButton.innerText = "?";
+  tooltipButton.style.fontSize = "14px";
+  tooltipButton.style.marginLeft = "10px";
+  tooltipButton.style.borderRadius = "50%";
+  tooltipButton.style.border = "none";
+  tooltipButton.style.backgroundColor = "darkgray";
+  tooltipButton.style.color = "white";
+  tooltipButton.style.width = "20px";
+  tooltipButton.style.height = "20px";
+  tooltipButton.style.display = "flex";
+  tooltipButton.style.justifyContent = "center";
+  tooltipButton.style.alignItems = "center";
+  tooltipButton.style.cursor = "pointer";
+  tooltipButton.style.position = "relative";
+  tooltipButton.onclick = () => {
+    helpHandler("tooltipDocs");
+    window.open(
+      "https://github.com/nathannlu/ComfyUI-Cloud/blob/main/docs/get-started.md",
+      "_blank"
+    );
+  };
+  tooltipButton.onmouseover = function () {
+    helpHandler("tooltipHover");
+    tooltipText.style.visibility = "visible";
+    tooltipText.style.opacity = "1";
+  };
+  tooltipButton.onmouseout = function () {
+    tooltipText.style.visibility = "hidden";
+    tooltipText.style.opacity = "0";
+  };
+
+  const tooltipText = document.createElement("div");
+  tooltipText.id = "comfycloud-tooltip-text";
+  tooltipText.style.visibility = "hidden";
+  tooltipText.style.width = "250px";
+  tooltipText.style.backgroundColor = "#555";
+  tooltipText.style.color = "#fff";
+  tooltipText.style.textAlign = "center";
+  tooltipText.style.borderRadius = "6px";
+  tooltipText.style.paddingInline = "16px";
+  tooltipText.style.position = "absolute";
+  tooltipText.style.zIndex = "1";
+  tooltipText.style.bottom = "125%";
+  tooltipText.style.left = "50%";
+  tooltipText.style.marginLeft = "-290px";
+  tooltipText.style.marginBottom = "-220px";
+  tooltipText.style.opacity = "0";
+  tooltipText.style.transition = "opacity 0.3s";
+  tooltipText.innerHTML = `
+    <div style="text-align: left;">
+      <p>
+        <strong>How to run a cloud workflow:</strong>
+      </p>
+      <ol type="1" style="padding-left: 16px;">
+        <li style="padding-bottom: 8px;">Click "Generate on cloud GPU"</li>
+        <li style="padding-bottom: 8px;">Name your workflow and wait for it to be uploaded.</li>
+        <li style="padding-bottom: 8px;">Your workflow will be automatically executed.</li>
+      </ol>
+      <p style="font-size: 10px; color: #aba6a6;">Need more help? Click me to view the docs, or hit us up on Discord!</p>
+    </div>
+  `;
 
   const box = document.createElement("div");
   box.innerHTML = `
   <div id='comfycloud-message'>
   </div>
   `;
+
+  tooltipButton.appendChild(tooltipText);
+  titleElement.appendChild(tooltipButton);
 
   queueButton.after(dividerTop);
   dividerTop.after(titleElement);
