@@ -131,7 +131,7 @@ export function addInterface() {
   tooltipButton.style.marginLeft = "10px";
   tooltipButton.style.borderRadius = "50%";
   tooltipButton.style.border = "none";
-  tooltipButton.style.backgroundColor = "darkgray";
+  tooltipButton.style.backgroundColor = "#b5b5b5";
   tooltipButton.style.color = "white";
   tooltipButton.style.width = "20px";
   tooltipButton.style.height = "20px";
