@@ -203,8 +203,8 @@ export function addInterface() {
   cloudInference.after(feedbackButton);
   feedbackButton.after(supportButton);
   supportButton.after(docsButton);
-  docsButton.after(dividerBottom);
-  dividerBottom.after(box);
+  docsButton.after(box);
+  box.after(dividerBottom);
 }
 
 export const setButtonLoading = () => {
