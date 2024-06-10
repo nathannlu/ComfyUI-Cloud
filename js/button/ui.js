@@ -211,7 +211,7 @@ export const setButtonLoading = () => {
   const menu = document.querySelector(".comfy-menu");
   const btn = menu.querySelector("#comfycloud-gpu-button");
   btn.innerHTML = cloudButtonLoadingHTML;
-  btn.style.color = "#000";
+  btn.style.color = "#ddd";
   btn.disabled = true;
 };
 
