@@ -37,6 +37,10 @@ const workflow = {
   retrieve: {
     method: "GET",
     path: "/workflow/{workflow_id}",
+  },
+  error: {
+    method: "POST",
+    path: "/workflow/error"
   }
 }
 

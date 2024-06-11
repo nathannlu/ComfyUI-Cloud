@@ -128,6 +128,7 @@ export async function onGeneration() {
     )
   } catch (e) {
     // handle error
+    await nimbus.workflow.error({ workflowId: getWorkflowId(), error: e.message })
     infoDialog.showMessage("Error", e);
   } finally {
     setButtonDefault()
