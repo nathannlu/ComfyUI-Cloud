@@ -22,6 +22,10 @@ const workflowRun = {
 
 const workflow = {
   // upload local
+  init: {
+    method: "POST",
+    path: "/workflow/init"
+  },
   create: {
     method: "POST",
     path: "/workflow",

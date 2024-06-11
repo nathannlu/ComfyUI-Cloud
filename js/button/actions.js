@@ -23,7 +23,7 @@ import { authDialog } from '../auth/index.js';
 import { nimbus, local } from '../resource/index.js';
 import { endpoint } from '../constants.js';
 
-import { ComfyCloudDialog, ComfyCloudPopover } from '../comfy/ui.js';
+import { ComfyCloudPopover } from '../comfy/ui.js';
 
 import { taskId, Progress } from '../ui/uploadProgress.js';
 
@@ -42,6 +42,8 @@ export async function onGeneration() {
       setButtonDefault()
       return authDialog.show();
     }
+
+    await nimbus.workflow.init();
 
     // check if ComfyCloud meta node exists
     const deployMeta = app.graph.findNodesByType("ComfyCloud");
@@ -73,7 +75,7 @@ export async function onGeneration() {
       })
       setWorkflowId(newWorkflow.id)
 
-
+    
       setMessage("Creating new workflow. This may take awhile");
     }
 
