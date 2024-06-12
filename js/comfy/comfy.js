@@ -27,6 +27,7 @@ export class ComfyNode extends LiteGraph.LGraphNode {
     this.renderCount = 0;
 
     this.buttons = []
+    this.objects = []
   }
 
   /**
@@ -84,13 +85,23 @@ export class ComfyNode extends LiteGraph.LGraphNode {
   onMouseDown() {
     const [mouseX, mouseY] = this.getRelativeMouseWithinNode()
 
+    const mouse = { x: mouseX, y: mouseY, width: 5, height: 5 }
+
     for (let i = 0; i < this.buttons.length; i++) {
       const button = this.buttons[i];
       if(button.inBounds(mouseX, mouseY)) {
         button.onClick()
       }
     }
-  }
+
+    for (let i = 0; i < this.objects.length; i++) {
+        const object = this.objects[i];
+        if (object.isTouching(mouse)) {
+          object.onClick()
+        }
+      }
+    }
+    
 
 
   /**

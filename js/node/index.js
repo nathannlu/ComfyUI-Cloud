@@ -54,7 +54,7 @@ export class ComfyCloud extends ComfyNode {
     this.settingsButton.y = this.size[1] - 28 - 8
     this.settingsButton.color = "#fff"
     this.settingsButton.backgroundColor = "#1D4AFF";
-    this.comfyCloudpets = []
+    // this.comfyCloudpets = []
   }
 
   onAdded(ctx) {
@@ -163,38 +163,34 @@ export class ComfyCloud extends ComfyNode {
   }
 
   addPet() {
-    console.log("addin pet node side")
     const height = this.size[1]
     const petWidth = 75
     const petHeight = 60
 
     const pet = new Pet({
-      x: 0,
+      x: this.size[0] - petWidth,
       y: height - petHeight,
       width: petWidth,
       height: petHeight,
     })
 
 
-    this.comfyCloudpets.push(pet)
+    this.objects.push(pet)
   }
 
 
+  // render obects
   renderPets(ctx) {
-    console.log("rendering pets node side")
-    for (let i = 0; i < this.comfyCloudpets.length; i++) {
-      const pet = this.comfyCloudpets[i]
+    for (let i = 0; i < this.objects.length; i++) {
+      const pet = this.objects[i]
       // pet.render(ctx, this.renderCount)
       pet.render(ctx, this.renderCount);
     }
-    console.log("rendered pets")
   }
 
 
   renderOnce() {
     this.addPet()
-    console.log("rendered once node side")
-    console.log(JSON.stringify(this.comfyCloudpets))
   }
 
 }

@@ -70,16 +70,17 @@ export class Pet extends GameObject {
     this.petImage.src =
       'https://comfyui-output.nyc3.cdn.digitaloceanspaces.com/babycorgi-sprite-128x128.png'
 
+    this.textBubble = new Image()
+    this.textBubble.src =
+        'https://comfyui-output.nyc3.cdn.digitaloceanspaces.com/text-bubble.png'
+
     this.age = 0
     this._initializePet()
   }
 
   async _initializePet() {
-    // Set pet age
-    this.age = 5
-
-    // Set hunger level
-    this.hungerPoints = 5
+    this.talk = false
+    this.talkText = ''
   }
 
   /**
@@ -111,6 +112,20 @@ export class Pet extends GameObject {
     })
   }
 
+  setTalk(text, duration = 1000) {
+    // set an emote for t seconds
+    this.talk = true
+    this.talkText = text
+
+    setTimeout(() => {
+      this.talk = false
+    }, duration)
+  }
+
+  onClick() {
+    console.log("clicked")
+    this.setTalk('Woof!')
+  }
 
   // _chooseRandomDirection() {
   //   const directions = ['left', 'right', 'idle1', 'idle2']
@@ -129,21 +144,24 @@ export class Pet extends GameObject {
 
   // // debug function
   _showHitBox(ctx) {
-    console.log("showing hitbox pet side)")
-
     if (!ctx) {
       console.error("Canvas context (ctx) is undefined.");
       return;
     }
 
     ctx.fillStyle = 'blue'
-    // ctx.fillRect(
-    //   this.x, // x
-    //   this.y,
-    //   this.width,
-    //   this.height,
-    // )
+    if (ctx.fillRect) {
+      ctx.fillRect(
+        this.x, // x
+        this.y,
+        this.width,
+        this.height,
+      )
+    }
+  
   }
+
+
 
   // renderOnTop(ctx) {
   //   ctx.fillStyle = 'blue'
@@ -276,8 +294,6 @@ export class Pet extends GameObject {
   // }
 
   render(ctx, renderCount) {
-    console.log("render (pet side)")
-
     this.createSpriteAnimations(this.petImage)
 
     // move the pet
