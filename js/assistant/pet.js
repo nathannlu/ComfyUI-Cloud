@@ -245,59 +245,41 @@ export class Pet extends GameObject {
   }
 
 
-  // renderTextBubble(ctx) {
-  //   ctx.fillStyle = 'black'
-  //   ctx.font = '14px Courier New'
-  //   ctx.textAlign = 'center'
-  //   ctx.textBaseline = 'middle'
+  renderTextBubble(ctx) {
+    ctx.fillStyle = 'black'
+    ctx.font = '14px Courier New'
 
-  //   const textBubbleWidth = 70
-  //   const textBubbleHeight = 40
-  //   if (this.currentDirection == 'left') {
-  //     const textBubbleX = -this.x - this.width + textBubbleWidth
-  //     const textBubbleY = this.y - textBubbleHeight
-  //     ctx.save()
-  //     ctx.scale(-1, 1)
-  //     ctx.drawImage(
-  //       this.textBubble,
-  //       textBubbleX,
-  //       textBubbleY,
-  //       textBubbleWidth,
-  //       textBubbleHeight,
-  //     )
-  //     ctx.restore()
+    const textBubbleWidth = 70
+    const textBubbleHeight = 40
 
-  //     // Calculate text position
-  //     const textX = this.x - textBubbleWidth / 2
-  //     const textY = textBubbleY + textBubbleHeight / 2
+    const textBubbleX = this.x + this.width
+    const textBubbleY = this.y - textBubbleHeight
+      
 
-  //     ctx.fillText(this.talkText, textX, textY)
-  //   } else {
-  //     // this includes idle, and everything
-  //     // else at the moment
-  //     const textBubbleX = this.x + this.width
-  //     const textBubbleY = this.y - textBubbleHeight
+    ctx.drawImage(
+      this.textBubble,
+      textBubbleX,
+      textBubbleY,
+      textBubbleWidth,
+      textBubbleHeight,
+    )
 
-  //     ctx.drawImage(
-  //       this.textBubble,
-  //       textBubbleX,
-  //       textBubbleY,
-  //       textBubbleWidth,
-  //       textBubbleHeight,
-  //     )
+    const textX = textBubbleX + textBubbleWidth / 4
+    const textY = textBubbleY + textBubbleHeight / 1.7
 
-  //     const textX = textBubbleX + textBubbleWidth / 2
-  //     const textY = textBubbleY + textBubbleHeight / 2
-
-  //     ctx.fillText(this.talkText, textX, textY)
-  //   }
-  // }
+    ctx.fillText(this.talkText, textX, textY)
+    // }
+  }
 
   render(ctx, renderCount) {
     this.createSpriteAnimations(this.petImage)
 
+    if (this.talk) {
+      this.renderTextBubble(ctx)
+    }
+
     // move the pet
-    this._showHitBox(ctx)
+    // this._showHitBox(ctx)
     this.move(ctx, renderCount)
   }
 }
