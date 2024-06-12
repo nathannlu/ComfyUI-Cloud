@@ -13,7 +13,7 @@ export const helpHandler = async (type) => {
     };
   
     if (supportTypes[type]) {
-      await supportTypes[type]({ userId: user?.id });
+      await supportTypes[type]({ user_id: user?.id });
     } else {
       throw new Error(`Unsupported support type: ${type}`);
     }

@@ -74,8 +74,6 @@ export const getUser = async () => {
     '/comfy-cloud/user',
   ).then((x) => x.json())
 
-  const userId = user?.id;
-  console.log("got user id", userId, user)
   return user;
 }
 
