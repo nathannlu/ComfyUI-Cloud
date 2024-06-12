@@ -1,5 +1,6 @@
 //import { GIF } from "../libs/gif.js";
 import { GameObject } from './core.js'
+import workflowState from './state.js'
 
 // Our sprite sheet is on a grid of 64pxs
 // Each row is 64px tall, and each frame is 64px wide
@@ -64,6 +65,7 @@ export class Pet extends GameObject {
     // after t seconds.
     this.time = 0
     this.directionDuration = 0
+    this.scaleDownBy = 10
 
     // Assets
     this.petImage = new Image()
@@ -87,7 +89,7 @@ export class Pet extends GameObject {
    * Creates a list of animations from a spritesheet
    * - e.g. renderWalk, renderSniff_walk, renderIdle1
    */
-  createSpriteAnimations(image) {
+  createSpriteAnimations(image, scaleDownBy) {
     Object.keys(SPRITE_SHEET).forEach((animName) => {
       // transform name to title case
       // FUNC1 -> Func1
@@ -107,15 +109,20 @@ export class Pet extends GameObject {
             spriteFramesY,
             slowFpsBy,
           },
+          {
+            scaleDownBy
+          }
         )
       }
     })
   }
 
-  setTalk(text, duration = 1000) {
+  setTalk(text) {
     // set an emote for t seconds
     this.talk = true
     this.talkText = text
+    const timePerChar = 75
+    const duration = this.talkText.length * timePerChar;
 
     setTimeout(() => {
       this.talk = false
@@ -123,24 +130,8 @@ export class Pet extends GameObject {
   }
 
   onClick() {
-    console.log("clicked")
-    this.setTalk('Woof!')
+    this.setTalk(workflowState.getState("workflowState"))
   }
-
-  // _chooseRandomDirection() {
-  //   const directions = ['left', 'right', 'idle1', 'idle2']
-
-  //   const changeDirections = () => {
-  //     const randomIndex = Math.floor(Math.random() * directions.length)
-  //     this.currentDirection = directions[randomIndex]
-  //   }
-
-  //   if (Date.now() - this.time > this.directionDuration) {
-  //     changeDirections()
-  //     this.time = Date.now()
-  //     this.directionDuration = Math.random() * 4000 + 1000
-  //   }
-  // }
 
   // // debug function
   _showHitBox(ctx) {
@@ -161,47 +152,16 @@ export class Pet extends GameObject {
   
   }
 
-
-
-  // renderOnTop(ctx) {
-  //   ctx.fillStyle = 'blue'
-  //   ctx.fillRect(
-  //     this.x, // x
-  //     this.y - this.height,
-  //     this.width,
-  //     this.height,
-  //   )
-  // }
-
-  // setEmote() {
-  //   // set an emote for t seconds
-  //   this.emote = true
-
-  //   setTimeout(() => {
-  //     this.emote = false
-  //   }, 1000)
-  // }
-
-  // setTalk(text, duration = 1000) {
-  //   // set an emote for t seconds
-  //   this.talk = true
-  //   this.talkText = text
-
-  //   setTimeout(() => {
-  //     this.talk = false
-  //   }, duration)
-  // }
-
-  // onClick() {
-  //   this.setTalk('Woof!')
-  // }
-
   renderSpriteAnimation(ctx, spriteSheet, frameSettings) {
     const {
       renderCount,
       spriteFrames,
       spriteFramesY,
+      slowFpsBy: _slowFpsBy
     } = frameSettings
+
+    let slowFpsBy = _slowFpsBy || 10
+    // const { scaleDownBy } = options
 
     const _spriteFramesY = SPRITE_SIZE * spriteFramesY
     const spriteRenderSize = SPRITE_SIZE // This is the final size users see the sprite as
@@ -211,8 +171,8 @@ export class Pet extends GameObject {
     // There is 5 frames in the sprite sheet for walking
     // so instead of doing this.renderCount % 4 (0 - 5 frames),
     // we do 0 - 50 frames and scale down for a lower image fps.
-    const _frame = renderCount % (spriteFrames )
-    const frame = Math.round(_frame)
+    const _frame = renderCount % (spriteFrames * slowFpsBy)
+    const frame = Math.round(_frame/ slowFpsBy)
 
     const currentRenderFrame = SPRITE_SIZE * frame
 
@@ -238,9 +198,6 @@ export class Pet extends GameObject {
 
 
   move(ctx, renderCount) {
-    // switch (this.currentDirection) {
-    //   default:
-    //   }
     this.renderIdle2(ctx, renderCount)
   }
 
@@ -248,9 +205,13 @@ export class Pet extends GameObject {
   renderTextBubble(ctx) {
     ctx.fillStyle = 'black'
     ctx.font = '14px Courier New'
+    ctx.fontWeight = 'bold'
 
-    const textBubbleWidth = 70
-    const textBubbleHeight = 40
+    const lines = this.talkText.split('\n');
+
+    const textBubbleWidth = this.talkText.length * 7
+    const textBubbleHeight = lines.length * 35
+
 
     const textBubbleX = this.x + this.width
     const textBubbleY = this.y - textBubbleHeight
@@ -264,21 +225,23 @@ export class Pet extends GameObject {
       textBubbleHeight,
     )
 
-    const textX = textBubbleX + textBubbleWidth / 4
-    const textY = textBubbleY + textBubbleHeight / 1.7
+    const textX = textBubbleX + textBubbleWidth / 6
+    const textY = textBubbleY + textBubbleHeight / 2.4
 
-    ctx.fillText(this.talkText, textX, textY)
+    for (let i = 0; i < lines.length; i++) {
+      ctx.fillText(lines[i], textX, textY + i * 20);
+    }
+
     // }
   }
 
   render(ctx, renderCount) {
-    this.createSpriteAnimations(this.petImage)
+    this.createSpriteAnimations(this.petImage, this.scaleDownBy)
 
     if (this.talk) {
       this.renderTextBubble(ctx)
     }
 
-    // move the pet
     // this._showHitBox(ctx)
     this.move(ctx, renderCount)
   }
