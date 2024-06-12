@@ -126,12 +126,20 @@ export async function onGeneration() {
     
     // create run
     //await createRun()
-    await nimbus.workflowRun.create()
+    const newWorkflowRun = await nimbus.workflowRun.create()
 
     infoDialog.showMessage(
       "Item queued!",
       "You can view your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
     )
+
+    const e = new CustomEvent('workflowRunCreated', {
+      detail: {
+        workflowRunId: newWorkflowRun.id
+      }
+    });
+    document.dispatchEvent(e);
+
     workflowState.setState("workflowState", WorkflowState.PROCESSING);
   } catch (e) {
     // handle error
@@ -142,3 +150,26 @@ export async function onGeneration() {
   }
 }
 
+document.addEventListener('workflowRunCreated', async (e) => {
+  let poll = true; // Use a boolean variable to control the loop
+
+  while (poll) {
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for 2 seconds before the next poll
+
+    try {
+      const { workflowRun } = await nimbus.workflowRun.pollRun(e.detail.workflowRunId);
+      if (workflowRun?.status === "success" || workflowRun?.status === "failed" || workflowRun?.status === "terminated") {
+        poll = false; // Exit the loop when a terminal status is reached
+      }
+    } catch (error) {
+      console.error("Poll workflow run error:", error);
+      poll = false; // Exit the loop if an error occurs
+    }
+  }
+
+  console.log("Show notif: Workflow run completed", e.detail.workflowRunId);
+  infoDialog.showMessage(
+    "Workflow run completed!",
+    "You got an extra +6 credits for running this workflow. You can use these credits to run more workflows. View your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
+  );
+});
