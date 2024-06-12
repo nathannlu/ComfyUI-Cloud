@@ -3,6 +3,7 @@ import { ComfyNode } from '../comfy/comfy.js';
 import { cloudIconSmall } from '../ui/html.js';
 import { workflowTableDialog, paymentTableDialog } from './dialogs.js';
 import { endpoint } from '../constants.js';
+import { Pet } from '../assistant/pet.js'
 
 export class ComfyCloud extends ComfyNode {
   color = "#fff" 
@@ -19,7 +20,7 @@ export class ComfyCloud extends ComfyNode {
       this.properties.version = "";
     }
 
-    this.widgets_start_y = 10;
+    this.widgets_start_y = 10;    
     this.setSize([300,100]);
     this.resizeable = false;
 
@@ -35,7 +36,7 @@ export class ComfyCloud extends ComfyNode {
     this.logo = new Image();
     this.logo.src = URL.createObjectURL(new Blob([cloudIconSmall], { type: 'image/svg+xml' }));
 
-    this.menuButton = this.addButton("View past runs", {}, async () => {
+    this.menuButton = this.addButton("View Results", {}, async () => {
       workflowTableDialog.show()
     })
 
@@ -53,18 +54,25 @@ export class ComfyCloud extends ComfyNode {
     this.settingsButton.y = this.size[1] - 28 - 8
     this.settingsButton.color = "#fff"
     this.settingsButton.backgroundColor = "#1D4AFF";
+    // this.comfyCloudpets = []
   }
 
-  onAdded() {
+  onAdded(ctx) {
+    this.renderOnce(ctx);
+    this.renderPets(ctx);
+
     createComfyNode()
   }
 
   drawLogo(ctx) {
-    ctx.drawImage(this.logo, 9, -21);
-    ctx.fillStyle = "#1D4AFF"
-    ctx.font = "bold 12px Arial";
-    ctx.fillText("Comfy Cloud", 32, -8)
+    
+      ctx.drawImage(this.logo, 9, -21);
+      ctx.fillStyle = "#1D4AFF"
+      ctx.font = "bold 12px Arial";
+      ctx.fillText("Comfy Cloud", 32, -8)
   }
+
+
 
   gradient(context) {
     let paddingX = 4
@@ -112,6 +120,8 @@ export class ComfyCloud extends ComfyNode {
 
 
   render(ctx) {
+    this.onAdded(ctx);
+
     const { 
       //workflow_id, 
       workflow_name
@@ -150,6 +160,37 @@ export class ComfyCloud extends ComfyNode {
       ctx.fillText("Delete this node and click on the ", 10, 40)
       ctx.fillText("'Generate on cloud GPU' button to get started", 10, 54)
     }
+  }
+
+  addPet() {
+    const height = this.size[1]
+    const petWidth = 75
+    const petHeight = 60
+
+    const pet = new Pet({
+      x: this.size[0] - petWidth,
+      y: height - petHeight,
+      width: petWidth,
+      height: petHeight,
+    })
+
+
+    this.objects.push(pet)
+  }
+
+
+  // render obects
+  renderPets(ctx) {
+    for (let i = 0; i < this.objects.length; i++) {
+      const pet = this.objects[i]
+      // pet.render(ctx, this.renderCount)
+      pet.render(ctx, this.renderCount);
+    }
+  }
+
+
+  renderOnce() {
+    this.addPet()
   }
 
 }

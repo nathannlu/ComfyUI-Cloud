@@ -22,15 +22,20 @@ import {
 import { authDialog } from '../auth/index.js';
 import { nimbus, local } from '../resource/index.js';
 import { endpoint } from '../constants.js';
+import workflowState, { WorkflowState } from '../assistant/state.js';
+import { 
+  // ComfyCloudDialog,
+  ComfyCloudPopover } from '../comfy/ui.js';
 
-import { ComfyCloudDialog, ComfyCloudPopover } from '../comfy/ui.js';
-
-import { taskId, Progress } from '../ui/uploadProgress.js';
+import {
+   taskId,
+   Progress } from '../ui/uploadProgress.js';
 
 export const progressDialog = new ComfyCloudPopover(Progress, "Uploading dependencies...")
 
 export async function onGeneration() {
   try {
+    // await createMetaNode();
     setButtonDefault()
 
     // check auth
@@ -67,6 +72,7 @@ export async function onGeneration() {
     if(isNewWorkflow) {
       // Wait for user to input workflow name
       await createMetaNode();
+      workflowState.setState("workflowState", WorkflowState.CREATING);
       //await createEmptyWorkflow()
       const newWorkflow = await nimbus.workflow.create({ 
         name: getWorkflowName(),
@@ -85,6 +91,7 @@ export async function onGeneration() {
     // sync workflow
     if(!isWorkflowUpToDate(diffDeps)) {
       setMessage("Syncing dependencies...");
+      workflowState.setState("workflowState", WorkflowState.SYNCING);
 
       const { dependencies, workflow_patch } = await resolveDependencies(diffDeps)
       const res = await local.uploadDependencies({
@@ -104,6 +111,7 @@ export async function onGeneration() {
       }
 
       setMessage("Updating workflow...");
+      workflowState.setState("workflowState", WorkflowState.UPDATING);
 
       await nimbus.workflow.update({
         workflow: localWorkflow.workflow,
@@ -124,6 +132,7 @@ export async function onGeneration() {
       "Item queued!",
       "You can view your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
     )
+    workflowState.setState("workflowState", WorkflowState.PROCESSING);
   } catch (e) {
     // handle error
     infoDialog.showMessage("Error", e);
