@@ -32,6 +32,12 @@ def update_requirements():
                 if updated_line is None:
                     # Skip if the line is a comment
                     continue
+                    
+                # Remove newlines, empty spaces, and tabs
+                updated_line = updated_line.strip()
+                if updated_line == "":
+                    # Skip if the line is a empty
+                    continue
 
                 updated_line = patch_git_urls(updated_line)
                 validate_requirements(updated_line, filepath)
