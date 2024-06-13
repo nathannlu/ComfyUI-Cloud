@@ -22,6 +22,10 @@ const workflowRun = {
 
 const workflow = {
   // upload local
+  init: {
+    method: "POST",
+    path: "/workflow/init"
+  },
   create: {
     method: "POST",
     path: "/workflow",
@@ -33,6 +37,10 @@ const workflow = {
   retrieve: {
     method: "GET",
     path: "/workflow/{workflow_id}",
+  },
+  error: {
+    method: "POST",
+    path: "/workflow/error"
   }
 }
 
@@ -82,6 +90,10 @@ const support = {
   tooltipDocs: {
     method: "POST",
     path: "/support/tooltipDocs"
+  },
+  assistant: {
+    method: "POST",
+    path: "/support/assistant"
   }
 }
 
