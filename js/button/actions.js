@@ -35,8 +35,8 @@ export const progressDialog = new ComfyCloudPopover(Progress, "Uploading depende
 
 export async function onGeneration() {
   try {
-    // await createMetaNode();
     setButtonDefault()
+    await nimbus.workflow.init();
 
     // check auth
     const apiToken = getApiToken();
@@ -129,8 +129,8 @@ export async function onGeneration() {
     const newWorkflowRun = await nimbus.workflowRun.create()
 
     infoDialog.showMessage(
-      "Item queued!",
-      "You can view your generation results by clicking the 'Menu' button in your Comfy Cloud custom node."
+      "Item queued! Comfy Cloud node has been created on the ComfyUI interface",
+      "You can view your generation results by clicking 'View Results' on the newly-created node."
     )
 
     const e = new CustomEvent('workflowRunCreated', {
@@ -143,6 +143,7 @@ export async function onGeneration() {
     workflowState.setState("workflowState", WorkflowState.PROCESSING);
   } catch (e) {
     // handle error
+    await nimbus.workflow.error({ e });
     infoDialog.showMessage("Error", e);
   } finally {
     setButtonDefault()

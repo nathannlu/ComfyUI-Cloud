@@ -9,7 +9,8 @@ export const helpHandler = async (type) => {
       support: nimbus.support.support,
       docs: nimbus.support.docs,
       tooltipHover: nimbus.support.tooltipHover,
-      tooltipDocs: nimbus.support.tooltipDocs
+      tooltipDocs: nimbus.support.tooltipDocs,
+      assistant: nimbus.support.assistant
     };
   
     if (supportTypes[type]) {

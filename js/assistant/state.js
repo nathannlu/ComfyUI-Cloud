@@ -1,5 +1,8 @@
+import { helpHandler } from "../button/support.js"
+
 export const WorkflowState = {
-    INSUFFICIENT_CREDITS: "Borked.\nNot enough credits to run another workflow.\nPress 'Account' to top up. ",
+    INCORRECT_START_NODE: "Delete me and click\n'Generate'! Woof!",
+    INSUFFICIENT_CREDITS: "Borked.\nNot enough credits to\nrun another workflow.\nPress 'Account' to top up. ",
     IDLE: "No workflows running.\nLet's generate something! Woof.",
     CREATING: "Creating new workflow.\nThis may take a while. Woof.",
     SYNCING: "Syncing dependencies to the cloud.\nWoof.",
@@ -19,6 +22,7 @@ class State {
     }
 
     getState(key) {
+        helpHandler("assistant")
         return this.state[key];
     }
 

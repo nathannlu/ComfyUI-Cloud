@@ -4,6 +4,7 @@ import { cloudIconSmall } from '../ui/html.js';
 import { workflowTableDialog, paymentTableDialog } from './dialogs.js';
 import { endpoint } from '../constants.js';
 import { Pet } from '../assistant/pet.js'
+import workflowState, {WorkflowState} from '../assistant/state.js'
 
 export class ComfyCloud extends ComfyNode {
   color = "#fff" 
@@ -137,6 +138,8 @@ export class ComfyCloud extends ComfyNode {
 
 
     if (workflow_name) {
+      workflowState.setState("workflowState", WorkflowState.IDLE);
+
       this.gradient(ctx)
 
       ctx.fillStyle = "white"
@@ -150,6 +153,8 @@ export class ComfyCloud extends ComfyNode {
       ctx.fillText(workflow_name, 60, 40)
 
     } else {
+      workflowState.setState("workflowState", WorkflowState.INCORRECT_START_NODE);
+
       this.buttons = [];
       ctx.fillStyle = "white"
       ctx.font = "bold 16px Arial";
