@@ -1,0 +1,15 @@
+[project]
+name = "comfyui-cloud"
+description = "Run your workflow using cloud GPU resources, from your local ComfyUI.\nNOTE:After you first install the plugin...\nThe first time you click 'generate', you will be prompted to log into your account.Subsequent generations after the first is faster (the first run it takes a while to process your workflow). Once those two steps have been completed, you will be able to seamlessly generate your workflow on the cloud!"
+version = "1.0.0"
+license = "LICENSE"
+dependencies = ["modal", "synchronicity", "aiostream"]
+
+[project.urls]
+Repository = "https://github.com/nathannlu/ComfyUI-Cloud"
+#  Used by Comfy Registry https://comfyregistry.org
+
+[tool.comfy]
+PublisherId = ""
+DisplayName = "ComfyUI-Cloud"
+Icon = ""
