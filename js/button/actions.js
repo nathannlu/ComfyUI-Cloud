@@ -36,8 +36,6 @@ export const progressDialog = new ComfyCloudPopover(Progress, "Uploading depende
 export async function onGeneration() {
   try {
     setButtonDefault()
-    await nimbus.workflow.init();
-
     // check auth
     const apiToken = getApiToken();
     const doesApiTokenExist = !!apiToken;
@@ -47,6 +45,8 @@ export async function onGeneration() {
       setButtonDefault()
       return authDialog.show();
     }
+
+    await nimbus.workflow.init();
 
     // check if ComfyCloud meta node exists
     const deployMeta = app.graph.findNodesByType("ComfyCloud");
