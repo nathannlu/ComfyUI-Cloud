@@ -34,9 +34,8 @@ def update_requirements():
                     continue
                     
                 # Remove newlines, empty spaces, and tabs
-                updated_line = updated_line.strip()
-                if updated_line == "":
-                    # Skip if the line is a empty
+                if updated_line == "" or updated_line == "\n":
+                    # Skip if the line is empty
                     continue
 
                 updated_line = patch_git_urls(updated_line)
