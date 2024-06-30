@@ -121,7 +121,7 @@ export class ComfyCloud extends ComfyNode {
 
 
   render(ctx) {
-    this.onAdded(ctx);
+    //this.onAdded(ctx);
 
     const { 
       //workflow_id, 
