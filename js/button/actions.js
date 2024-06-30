@@ -143,7 +143,7 @@ export async function onGeneration() {
     workflowState.setState("workflowState", WorkflowState.PROCESSING);
   } catch (e) {
     // handle error
-    await nimbus.workflow.error({ e });
+    await nimbus.workflow.error({ e: e.message || "No error message" });
     infoDialog.showMessage("Error", e);
   } finally {
     setButtonDefault()
