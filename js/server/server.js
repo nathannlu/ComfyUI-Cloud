@@ -2,9 +2,19 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const ngrok = require('ngrok');
+const cors = require('cors');
 
 const app = express();
-const port = 3000; // Change to whatever port you are comfortable with
+const port = 3000;
+
+const corsOptions = {
+    origin: 'http://127.0.0.1:5001', // local
+    // origin: 'https://comfyui-cloud.com/', // prod
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+  };
+
+app.use(cors(corsOptions));
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
