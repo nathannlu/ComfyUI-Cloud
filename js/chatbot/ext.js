@@ -1,6 +1,7 @@
 // import { api, app } from './comfy/comfy.js'
 import { app } from "../comfy/comfy.js";
 import { getBotResponse } from "./chatbot.js";
+import { runWorkflowLoader } from "./workflow.js";
 
 const CHAT_BUTTON_ID = "chat-button";
 const CHAT_BOX_ID = "chat-box";
@@ -86,7 +87,7 @@ const createChatBox = () => {
 
   // New button section
   const newButton = document.createElement("button");
-  newButton.innerText = "New Button";
+  newButton.innerText = "Run test fxn";
   newButton.style.position = "absolute";
   newButton.style.top = "10px";
   newButton.style.right = "10px";
@@ -98,19 +99,32 @@ const createChatBox = () => {
   newButton.style.cursor = "pointer";
 
   newButton.addEventListener("click", () => {
-    console.log("sets graph to null");
-    console.log(app.graph)
+    runWorkflowLoader();
+  });
 
-    // TODO: insert a parsed node
-    const newNode = LiteGraph.createNode("LoadImage");
-    app.graph.add(newNode);
+  // New button section
+  const otherButton = document.createElement("button");
+  otherButton.innerText = "Log graph";
+  otherButton.style.position = "absolute";
+  otherButton.style.top = "100px";
+  otherButton.style.right = "10px";
+  otherButton.style.padding = "10px";
+  otherButton.style.backgroundColor = "blue";
+  otherButton.style.color = "white";
+  otherButton.style.border = "none";
+  otherButton.style.borderRadius = "4px";
+  otherButton.style.cursor = "pointer";
 
-    app.graph.change()
-    console.log(app.graph)
+  otherButton.addEventListener("click", () => {
+    // const newNode = LiteGraph.createNode("LoadImage");
+    // app.graph.add(newNode);
+    console.log(app.graph);
+    app.graph.change();
     // console.log('New button clicked!');
   });
 
   chatBox.appendChild(newButton);
+  chatBox.appendChild(otherButton);
 
   return chatBox;
 };
