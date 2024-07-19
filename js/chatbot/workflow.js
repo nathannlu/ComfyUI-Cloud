@@ -54,12 +54,6 @@ const newSampleInput = {
   ],
 };
 
-function getOutputIndex(node, inputName) {
-  return node.outputs.findIndex(
-    (output) => output.name === getInputType(inputName)
-  );
-}
-
 function getInputIndex(node, inputName) {
   return node.inputs.findIndex(
     (input) => input.name === getInputType(inputName)
@@ -128,8 +122,7 @@ function transformInputToGraph(input) {
     const toNode = nodesById[edgeData.to];
 
     // Adding output to fromNode
-    let outputIndex = getOutputIndex(fromNode, edgeData.to_input);
-
+    let outputIndex = edgeData.from_output;
     // add inputs
     let inputIndex = getInputIndex(toNode, edgeData.to_input);
 
@@ -145,17 +138,15 @@ function transformInputToGraph(input) {
     console.log("toNode");
     console.log(toNode);
 
-    // add outputs by inferring the inputs
-    // if output doesnt already exist
-    if (outputIndex < 0) {
-      fromNode.outputs.push({
-        name: getInputType(edgeData.to_input),
-        // name: edgeData.input,
-        type: getInputType(edgeData.to_input),
-        links: [],
-        slot_index: fromNode.outputs.length,
-      });
-    }
+    // add outputs
+    fromNode.outputs.push({
+      name: getInputType(edgeData.to_input),
+      // name: edgeData.input,
+      type: getInputType(edgeData.to_input),
+      links: [],
+      slot_index: fromNode.outputs.length,
+    });
+
 
     outputIndex = fromNode.outputs.length - 1;
     inputIndex = fromNode.inputs.length - 1;
@@ -167,7 +158,8 @@ function transformInputToGraph(input) {
     const link = [
       index + 1, // Link id
       fromNode.id, // Origin node id
-      getOutputIndex(fromNode, edgeData.to_input), // origin index
+      edgeData.from_output,
+      // getOutputIndex(fromNode, edgeData.to_input), // origin index
       toNode.id, // Destination node id
       getInputIndex(toNode, edgeData.to_input), // destination index
       getInputType(edgeData.to_input),
