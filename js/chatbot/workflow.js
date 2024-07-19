@@ -1,4 +1,5 @@
 import { app } from "../comfy/comfy.js";
+import { getInputType } from "./edgeTypes.js";
 
 const input = {
   nodes: [
@@ -22,27 +23,6 @@ const input = {
     { from: 8, to: 9, input: "images" },
   ],
 };
-
-function getInputType(name) {
-  const nameTypeMap = {
-    model: "MODEL",
-    positive: "CONDITIONING",
-    negative: "CONDITIONING",
-    latent_image: "LATENT",
-    samples: "LATENT",
-    images: "IMAGE",
-    clip: "CLIP",
-    vae: "VAE",
-  };
-
-  const matchName = nameTypeMap[name];
-  if (matchName) {
-    return matchName;
-  } else {
-    console.log("not matching name, will return unknown: ", name);
-    return "XXX UNKNOWN INPUT TYPE XXX";
-  }
-}
 
 function getOutputIndex(node, inputName) {
   return node.outputs.findIndex(
@@ -74,7 +54,7 @@ function transformInputToGraph(input) {
   console.log(baseGraph);
 
   const xStep = 300; // step for node positions
-  const yStep = 300 // step for node positions
+  const yStep = 300; // step for node positions
   const yBase = 100; // base y position
   const nodesById = {}; // pointer of nodes by id for easier/faster search
 
@@ -104,8 +84,8 @@ function transformInputToGraph(input) {
       x += xStep;
       y = yBase;
     } else {
-        // y += newNode.size[1] + yStep;
-        y += yStep;
+      // y += newNode.size[1] + yStep;
+      y += yStep;
     }
     columnCounter++;
   });

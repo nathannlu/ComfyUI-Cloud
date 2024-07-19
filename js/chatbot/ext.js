@@ -120,7 +120,7 @@ const createChatBox = () => {
     // app.graph.add(newNode);
     console.log(app.graph);
     app.graph.change();
-    // console.log('New button clicked!');
+  
   });
 
   chatBox.appendChild(newButton);
