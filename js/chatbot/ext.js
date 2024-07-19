@@ -102,29 +102,26 @@ const createChatBox = () => {
     runWorkflowLoader();
   });
 
-  // New button section
-  const otherButton = document.createElement("button");
-  otherButton.innerText = "Log graph";
-  otherButton.style.position = "absolute";
-  otherButton.style.top = "100px";
-  otherButton.style.right = "10px";
-  otherButton.style.padding = "10px";
-  otherButton.style.backgroundColor = "blue";
-  otherButton.style.color = "white";
-  otherButton.style.border = "none";
-  otherButton.style.borderRadius = "4px";
-  otherButton.style.cursor = "pointer";
+  // log button
+  // const otherButton = document.createElement("button");
+  // otherButton.innerText = "Log graph";
+  // otherButton.style.position = "absolute";
+  // otherButton.style.top = "100px";
+  // otherButton.style.right = "10px";
+  // otherButton.style.padding = "10px";
+  // otherButton.style.backgroundColor = "blue";
+  // otherButton.style.color = "white";
+  // otherButton.style.border = "none";
+  // otherButton.style.borderRadius = "4px";
+  // otherButton.style.cursor = "pointer";
 
-  otherButton.addEventListener("click", () => {
-    // const newNode = LiteGraph.createNode("LoadImage");
-    // app.graph.add(newNode);
-    console.log(app.graph);
-    app.graph.change();
-  
-  });
+  // otherButton.addEventListener("click", () => {
+  //   console.log(app.graph);
+  //   app.graph.change();
+  // });
 
   chatBox.appendChild(newButton);
-  chatBox.appendChild(otherButton);
+  // chatBox.appendChild(otherButton);
 
   return chatBox;
 };
@@ -157,6 +154,9 @@ const sendMessage = () => {
 
         chatMessages.appendChild(botMessageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+
+        runWorkflowLoader()
+        // addNodesAndEdges(app.graph, response.message);
       })
       .catch((error) => {
         console.error(error);

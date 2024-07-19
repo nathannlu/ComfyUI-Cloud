@@ -1,7 +1,7 @@
 import { app } from "../comfy/comfy.js";
 import { getInputType } from "./edgeTypes.js";
 
-const input = {
+const sampleInput = {
   nodes: [
     { id: 4, class_type: "CheckpointLoaderSimple" },
     { id: 6, class_type: "CLIPTextEncode" },
@@ -24,6 +24,59 @@ const input = {
   ],
 };
 
+// const newSampleInput = {
+//   nodes: [
+//     {
+//       id: 4,
+//       class_type: "CheckpointLoaderSimple",
+//       widget_values: { checkpoint: "v1-5-pruned-emaonly.ckpt" },
+//     },
+//     {
+//       id: 5,
+//       class_type: "EmptyLatentImage",
+//       widget_values: { width: 512, height: 512, channels: 1 },
+//     },
+//     {
+//       id: 6,
+//       class_type: "CLIPTextEncode",
+//       widget_values: {
+//         text: "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+//       },
+//     },
+//     {
+//       id: 7,
+//       class_type: "CLIPTextEncode",
+//       widget_values: { text: "text, watermark" },
+//     },
+//     {
+//       id: 3,
+//       class_type: "KSampler",
+//       widget_values: {
+//         seed: 156680208700286,
+//         continuous: true,
+//         steps: 20,
+//         denoising: 8,
+//         scheduler: "euler",
+//         noise: "normal",
+//         scale: 1,
+//       },
+//     },
+//     { id: 8, class_type: "VAEDecode" },
+//     { id: 9, class_type: "SaveImage" },
+//   ],
+//   edges: [
+//     { from: 4, to: 3, from_output: 0, to_input: "model" },
+//     { from: 5, to: 3, from_output: 0, to_input: "latent_image" },
+//     { from: 4, to: 6, from_output: 1, to_input: "clip" },
+//     { from: 6, to: 3, from_output: 0, to_input: "positive" },
+//     { from: 7, to: 3, from_output: 0, to_input: "negative" },
+//     { from: 4, to: 7, from_output: 1, to_input: "clip" },
+//     { from: 3, to: 8, from_output: 0, to_input: "samples" },
+//     { from: 4, to: 8, from_output: 2, to_input: "vae" },
+//     { from: 8, to: 9, from_output: 0, to_input: "images" },
+//   ],
+// };
+
 function getOutputIndex(node, inputName) {
   return node.outputs.findIndex(
     (output) => output.name === getInputType(inputName)
@@ -36,7 +89,6 @@ function getInputIndex(node, inputName) {
   );
 }
 
-// TODO: WIP
 // translates chatgpt input to immediately loadable graph format
 function transformInputToGraph(input) {
   const baseGraph = {
@@ -157,54 +209,20 @@ function transformInputToGraph(input) {
   return baseGraph;
 }
 
-// const node = LiteGraph.createNode("LoadImage");
-// graph.add(node);
-
-// input: chat gpt's generated workflow
-function addNodesAndEdges(graph, input) {
-  const translatedData = transformInputToGraph(input);
-  console.log("Translated Graph Data: ");
-  console.log(translatedData);
+export function loadGraphFromPrompt(generatedWorkflow) {
+  const translatedData = transformInputToGraph(generatedWorkflow);
+  // console.log("Translated Graph Data: ");
+  // console.log(translatedData);
   app.loadGraphData(translatedData, true);
-
-  // OUTDATED MANUAL INSERTION METHOD
-  //   const n = input.nodes;
-  // const missingNodeTypes = [];
-  // const nodesById = {};
-
-  // TODO: register nodes. e.g. LiteGraph.registered_node_types["LoadImage"] = LoadImageNode;
-
-  // code block from loadGraphData to find unregistered nodes
-  // if (!(n.type in LiteGraph.registered_node_types)) {
-  // 	missingNodeTypes.push(n.type);
-  // 	// n.type = sanitizeNodeName(n.type);
-  // }
-
-  // insert the nodes one by one. This code is working
-  //   n.forEach((nodeData) => {
-  //     const node = LiteGraph.createNode(nodeData.class_type);
-  //     node.id = nodeData.id;
-  //     node.pos = nodeData.pos || [100, 100]; // Default position. TODO: add increment for position
-  //     graph.add(node);
-  //     // nodesById[nodeData.id] = node;
-  //   });
-
-  // TODO: add input edges
-
-  // TODO: add output edges
-
-  // TODO: without manually adding the edges, try to get input data into defaultGraph's format
-  // app.loadGraphData(defaultGraph, true)
+  app.graph.change();
 }
 
 export function runWorkflowLoader() {
   console.log("Initial graph");
   console.log(app.graph);
 
-  //   app.graph.clear(); // clear graph
-  addNodesAndEdges(app.graph, input);
+  loadGraphFromPrompt(sampleInput);
 
-  app.graph.change();
   console.log("Graph after change");
   console.log(app.graph);
 }
