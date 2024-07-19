@@ -1,81 +1,58 @@
 import { app } from "../comfy/comfy.js";
 import { getInputType } from "./edgeTypes.js";
 
-const sampleInput = {
+const newSampleInput = {
   nodes: [
-    { id: 4, class_type: "CheckpointLoaderSimple" },
-    { id: 6, class_type: "CLIPTextEncode" },
-    { id: 7, class_type: "CLIPTextEncode" },
-    { id: 5, class_type: "EmptyLatentImage" },
-    { id: 3, class_type: "KSampler" },
+    {
+      id: 4,
+      class_type: "CheckpointLoaderSimple",
+      widget_values: { checkpoint: "v1-5-pruned-emaonly.safetensors" },
+    },
+    {
+      id: 5,
+      class_type: "EmptyLatentImage",
+      widget_values: { width: 512, height: 512, channels: 1 },
+    },
+    {
+      id: 6,
+      class_type: "CLIPTextEncode",
+      widget_values: {
+        text: "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
+      },
+    },
+    {
+      id: 7,
+      class_type: "CLIPTextEncode",
+      widget_values: { text: "text, watermark" },
+    },
+    {
+      id: 3,
+      class_type: "KSampler",
+      widget_values: {
+        seed: 156680208700286,
+        continuous: true,
+        steps: 20,
+        denoising: 8,
+        scheduler: "euler",
+        noise: "normal",
+        scale: 1,
+      },
+    },
     { id: 8, class_type: "VAEDecode" },
     { id: 9, class_type: "SaveImage" },
   ],
   edges: [
-    { from: 4, to: 3, input: "model" },
-    { from: 5, to: 3, input: "latent_image" },
-    { from: 4, to: 6, input: "clip" },
-    { from: 6, to: 3, input: "positive" },
-    { from: 4, to: 7, input: "clip" },
-    { from: 7, to: 3, input: "negative" },
-    { from: 3, to: 8, input: "samples" },
-    { from: 4, to: 8, input: "vae" },
-    { from: 8, to: 9, input: "images" },
+    { from: 4, to: 3, from_output: 0, to_input: "model" },
+    { from: 5, to: 3, from_output: 0, to_input: "latent_image" },
+    { from: 4, to: 6, from_output: 1, to_input: "clip" },
+    { from: 6, to: 3, from_output: 0, to_input: "positive" },
+    { from: 7, to: 3, from_output: 0, to_input: "negative" },
+    { from: 4, to: 7, from_output: 1, to_input: "clip" },
+    { from: 3, to: 8, from_output: 0, to_input: "samples" },
+    { from: 4, to: 8, from_output: 2, to_input: "vae" },
+    { from: 8, to: 9, from_output: 0, to_input: "images" },
   ],
 };
-
-// const newSampleInput = {
-//   nodes: [
-//     {
-//       id: 4,
-//       class_type: "CheckpointLoaderSimple",
-//       widget_values: { checkpoint: "v1-5-pruned-emaonly.ckpt" },
-//     },
-//     {
-//       id: 5,
-//       class_type: "EmptyLatentImage",
-//       widget_values: { width: 512, height: 512, channels: 1 },
-//     },
-//     {
-//       id: 6,
-//       class_type: "CLIPTextEncode",
-//       widget_values: {
-//         text: "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
-//       },
-//     },
-//     {
-//       id: 7,
-//       class_type: "CLIPTextEncode",
-//       widget_values: { text: "text, watermark" },
-//     },
-//     {
-//       id: 3,
-//       class_type: "KSampler",
-//       widget_values: {
-//         seed: 156680208700286,
-//         continuous: true,
-//         steps: 20,
-//         denoising: 8,
-//         scheduler: "euler",
-//         noise: "normal",
-//         scale: 1,
-//       },
-//     },
-//     { id: 8, class_type: "VAEDecode" },
-//     { id: 9, class_type: "SaveImage" },
-//   ],
-//   edges: [
-//     { from: 4, to: 3, from_output: 0, to_input: "model" },
-//     { from: 5, to: 3, from_output: 0, to_input: "latent_image" },
-//     { from: 4, to: 6, from_output: 1, to_input: "clip" },
-//     { from: 6, to: 3, from_output: 0, to_input: "positive" },
-//     { from: 7, to: 3, from_output: 0, to_input: "negative" },
-//     { from: 4, to: 7, from_output: 1, to_input: "clip" },
-//     { from: 3, to: 8, from_output: 0, to_input: "samples" },
-//     { from: 4, to: 8, from_output: 2, to_input: "vae" },
-//     { from: 8, to: 9, from_output: 0, to_input: "images" },
-//   ],
-// };
 
 function getOutputIndex(node, inputName) {
   return node.outputs.findIndex(
@@ -126,7 +103,7 @@ function transformInputToGraph(input) {
       inputs: [],
       outputs: [],
       properties: {},
-      widgets_values: [], // TODO: look into how widgets work
+      widgets_values: node.widget_values ? Object.values(node.widget_values) : []
     };
 
     baseGraph.nodes.push(newNode);
@@ -151,16 +128,16 @@ function transformInputToGraph(input) {
     const toNode = nodesById[edgeData.to];
 
     // Adding output to fromNode
-    let outputIndex = getOutputIndex(fromNode, edgeData.input);
+    let outputIndex = getOutputIndex(fromNode, edgeData.to_input);
 
     // add inputs
-    let inputIndex = getInputIndex(toNode, edgeData.input);
+    let inputIndex = getInputIndex(toNode, edgeData.to_input);
 
     // if input doesnt already exist
     if (inputIndex < 0) {
       toNode.inputs.push({
-        name: edgeData.input,
-        type: getInputType(edgeData.input),
+        name: edgeData.to_input,
+        type: getInputType(edgeData.to_input),
         link: index + 1,
       });
     }
@@ -172,9 +149,9 @@ function transformInputToGraph(input) {
     // if output doesnt already exist
     if (outputIndex < 0) {
       fromNode.outputs.push({
-        name: getInputType(edgeData.input),
+        name: getInputType(edgeData.to_input),
         // name: edgeData.input,
-        type: getInputType(edgeData.input),
+        type: getInputType(edgeData.to_input),
         links: [],
         slot_index: fromNode.outputs.length,
       });
@@ -190,10 +167,10 @@ function transformInputToGraph(input) {
     const link = [
       index + 1, // Link id
       fromNode.id, // Origin node id
-      getOutputIndex(fromNode, edgeData.input), // origin index
+      getOutputIndex(fromNode, edgeData.to_input), // origin index
       toNode.id, // Destination node id
-      getInputIndex(toNode, edgeData.input), // destination index
-      getInputType(edgeData.input),
+      getInputIndex(toNode, edgeData.to_input), // destination index
+      getInputType(edgeData.to_input),
     ];
 
     console.log("link");
@@ -221,7 +198,7 @@ export function runWorkflowLoader() {
   console.log("Initial graph");
   console.log(app.graph);
 
-  loadGraphFromPrompt(sampleInput);
+  loadGraphFromPrompt(newSampleInput);
 
   console.log("Graph after change");
   console.log(app.graph);
