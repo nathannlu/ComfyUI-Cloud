@@ -74,16 +74,20 @@ function transformInputToGraph(input) {
   console.log(baseGraph);
 
   const xStep = 300; // step for node positions
+  const yStep = 300 // step for node positions
+  const yBase = 100; // base y position
   const nodesById = {}; // pointer of nodes by id for easier/faster search
 
   let x = 100; // starting x post
+  let y = yBase; // starting y post
+  let columnCounter = 0; // counter for columns
   // Create nodes with positions in order
   input.nodes.forEach((node, index) => {
     const newNode = {
       id: node.id,
       type: node.class_type,
-      pos: [x, 100],
-      size: [200, 50],
+      pos: [x, y],
+      size: [200, 50], // TODO: write a function to get the node's actual height for better placement
       flags: {},
       order: index,
       mode: 0,
@@ -95,7 +99,15 @@ function transformInputToGraph(input) {
 
     baseGraph.nodes.push(newNode);
     nodesById[node.id] = newNode;
-    x += xStep;
+
+    if (columnCounter % 3 === 0) {
+      x += xStep;
+      y = yBase;
+    } else {
+        // y += newNode.size[1] + yStep;
+        y += yStep;
+    }
+    columnCounter++;
   });
 
   console.log("baseGraph after nodes insertion");
