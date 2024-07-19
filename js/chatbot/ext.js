@@ -2,6 +2,9 @@
 import { app } from "../comfy/comfy.js";
 import { getBotResponse } from "./chatbot.js";
 import { runWorkflowLoader } from "./workflow.js";
+import { setButtonDefault } from "../button/ui.js";
+import { authDialog } from "../auth/index.js";
+import { getApiToken } from "../utils.js";
 
 const CHAT_BUTTON_ID = "chat-button";
 const CHAT_BOX_ID = "chat-box";
@@ -103,29 +106,37 @@ const createChatBox = () => {
   });
 
   // log button
-  // const otherButton = document.createElement("button");
-  // otherButton.innerText = "Log graph";
-  // otherButton.style.position = "absolute";
-  // otherButton.style.top = "100px";
-  // otherButton.style.right = "10px";
-  // otherButton.style.padding = "10px";
-  // otherButton.style.backgroundColor = "blue";
-  // otherButton.style.color = "white";
-  // otherButton.style.border = "none";
-  // otherButton.style.borderRadius = "4px";
-  // otherButton.style.cursor = "pointer";
+  const otherButton = document.createElement("button");
+  otherButton.innerText = "Log graph";
+  otherButton.style.position = "absolute";
+  otherButton.style.top = "100px";
+  otherButton.style.right = "10px";
+  otherButton.style.padding = "10px";
+  otherButton.style.backgroundColor = "blue";
+  otherButton.style.color = "white";
+  otherButton.style.border = "none";
+  otherButton.style.borderRadius = "4px";
+  otherButton.style.cursor = "pointer";
 
-  // otherButton.addEventListener("click", () => {
-  //   console.log(app.graph);
-  //   app.graph.change();
-  // });
+  otherButton.addEventListener("click", () => {
+    console.log(app.graph);
+    app.graph.change();
+  });
 
   chatBox.appendChild(newButton);
-  // chatBox.appendChild(otherButton);
+  chatBox.appendChild(otherButton);
 
   return chatBox;
 };
 const sendMessage = () => {
+  const apiToken = getApiToken();
+  const doesApiTokenExist = !!apiToken;
+  if (!doesApiTokenExist) {
+    toggleChatBox()
+    setButtonDefault();
+    return authDialog.show();
+  }
+
   const chatInput = document.getElementById(CHAT_INPUT_ID);
   const chatMessages = document.getElementById(CHAT_MESSAGES_ID);
   const message = chatInput.value.trim();
@@ -155,7 +166,7 @@ const sendMessage = () => {
         chatMessages.appendChild(botMessageElement);
         chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
 
-        runWorkflowLoader()
+        runWorkflowLoader();
         // addNodesAndEdges(app.graph, response.message);
       })
       .catch((error) => {
@@ -164,7 +175,7 @@ const sendMessage = () => {
   }
 };
 
-const toggleChatBox = () => {
+const toggleChatBox = async () => {
   const chatBox = document.getElementById(CHAT_BOX_ID);
   if (chatBox.style.display === "none") {
     chatBox.style.display = "block";
