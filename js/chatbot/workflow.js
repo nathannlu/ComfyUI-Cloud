@@ -1,59 +1,6 @@
 import { app } from "../comfy/comfy.js";
 import { getInputType } from "./edgeTypes.js";
 
-const newSampleInput = {
-  nodes: [
-    {
-      id: 4,
-      class_type: "CheckpointLoaderSimple",
-      widget_values: { checkpoint: "v1-5-pruned-emaonly.safetensors" },
-    },
-    {
-      id: 5,
-      class_type: "EmptyLatentImage",
-      widget_values: { width: 512, height: 512, channels: 1 },
-    },
-    {
-      id: 6,
-      class_type: "CLIPTextEncode",
-      widget_values: {
-        text: "beautiful scenery nature glass bottle landscape, , purple galaxy bottle,",
-      },
-    },
-    {
-      id: 7,
-      class_type: "CLIPTextEncode",
-      widget_values: { text: "text, watermark" },
-    },
-    {
-      id: 3,
-      class_type: "KSampler",
-      widget_values: {
-        seed: 156680208700286,
-        continuous: true,
-        steps: 20,
-        denoising: 8,
-        scheduler: "euler",
-        noise: "normal",
-        scale: 1,
-      },
-    },
-    { id: 8, class_type: "VAEDecode" },
-    { id: 9, class_type: "SaveImage" },
-  ],
-  edges: [
-    { from: 4, to: 3, from_output: 0, to_input: "model" },
-    { from: 5, to: 3, from_output: 0, to_input: "latent_image" },
-    { from: 4, to: 6, from_output: 1, to_input: "clip" },
-    { from: 6, to: 3, from_output: 0, to_input: "positive" },
-    { from: 7, to: 3, from_output: 0, to_input: "negative" },
-    { from: 4, to: 7, from_output: 1, to_input: "clip" },
-    { from: 3, to: 8, from_output: 0, to_input: "samples" },
-    { from: 4, to: 8, from_output: 2, to_input: "vae" },
-    { from: 8, to: 9, from_output: 0, to_input: "images" },
-  ],
-};
-
 function getInputIndex(node, inputName) {
   return node.inputs.findIndex(
     (input) => input.name === getInputType(inputName)
@@ -184,14 +131,4 @@ export function loadGraphFromPrompt(generatedWorkflow) {
   // console.log(translatedData);
   app.loadGraphData(translatedData, true);
   app.graph.change();
-}
-
-export function runWorkflowLoader() {
-  console.log("Initial graph");
-  console.log(app.graph);
-
-  loadGraphFromPrompt(newSampleInput);
-
-  console.log("Graph after change");
-  console.log(app.graph);
 }

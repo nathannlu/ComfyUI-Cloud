@@ -5,7 +5,7 @@ import {
   isValidWorkflow,
   parseWorkflowFromBot,
 } from "./chatbot.js";
-import { runWorkflowLoader, loadGraphFromPrompt } from "./workflow.js";
+import { loadGraphFromPrompt } from "./workflow.js";
 import { setButtonDefault } from "../button/ui.js";
 import { authDialog } from "../auth/index.js";
 import { getApiToken } from "../utils.js";
@@ -53,17 +53,16 @@ const sendMessage = async () => {
     try {
       const response = await getBotResponse(message);
       console.log("got response", response);
-      let botMessage = ""
-      
+      let botMessage = "";
+
       const parsedBotResponse = parseWorkflowFromBot(response);
-      
 
       if (isValidWorkflow(parsedBotResponse)) {
         console.log("Valid workflow that could be loaded");
-        botMessage = JSON.stringify(parsedBotResponse)
+        botMessage = JSON.stringify(parsedBotResponse);
       } else {
         console.log("Not a valid workflow that could be loaded");
-        botMessage = response.responses.bot
+        botMessage = response.responses.bot;
       }
 
       const botMessageElement = document.createElement("div");
@@ -159,44 +158,6 @@ const createChatBox = () => {
   chatInputContainer.appendChild(chatInput);
   chatInputContainer.appendChild(chatSendButton);
   chatBox.appendChild(chatInputContainer);
-
-  // New button section
-  const newButton = document.createElement("button");
-  newButton.innerText = "Run test fxn";
-  newButton.style.position = "absolute";
-  newButton.style.top = "10px";
-  newButton.style.right = "10px";
-  newButton.style.padding = "10px";
-  newButton.style.backgroundColor = "blue";
-  newButton.style.color = "white";
-  newButton.style.border = "none";
-  newButton.style.borderRadius = "4px";
-  newButton.style.cursor = "pointer";
-
-  newButton.addEventListener("click", () => {
-    runWorkflowLoader();
-  });
-
-  // log button
-  const otherButton = document.createElement("button");
-  otherButton.innerText = "Log graph";
-  otherButton.style.position = "absolute";
-  otherButton.style.top = "100px";
-  otherButton.style.right = "10px";
-  otherButton.style.padding = "10px";
-  otherButton.style.backgroundColor = "blue";
-  otherButton.style.color = "white";
-  otherButton.style.border = "none";
-  otherButton.style.borderRadius = "4px";
-  otherButton.style.cursor = "pointer";
-
-  otherButton.addEventListener("click", () => {
-    console.log(app.graph);
-    app.graph.change();
-  });
-
-  chatBox.appendChild(newButton);
-  chatBox.appendChild(otherButton);
 
   return chatBox;
 };
