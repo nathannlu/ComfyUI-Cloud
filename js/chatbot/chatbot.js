@@ -29,3 +29,6 @@ export async function getBotResponse(message, token) {
     }
 }
 
+export function isValidWorkflow(workflow) {
+    return workflow && workflow.nodes && workflow.edges;
+}

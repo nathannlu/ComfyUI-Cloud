@@ -1,7 +1,7 @@
 // import { api, app } from './comfy/comfy.js'
 import { app } from "../comfy/comfy.js";
-import { getBotResponse } from "./chatbot.js";
-import { runWorkflowLoader } from "./workflow.js";
+import { getBotResponse, isValidWorkflow } from "./chatbot.js";
+import { runWorkflowLoader, loadGraphFromPrompt } from "./workflow.js";
 import { setButtonDefault } from "../button/ui.js";
 import { authDialog } from "../auth/index.js";
 import { getApiToken } from "../utils.js";
@@ -133,7 +133,7 @@ const createChatBox = () => {
 };
 const sendMessage = () => {
   if (!doesApiTokenExist) {
-    toggleChatBox()
+    toggleChatBox();
     setButtonDefault();
     return authDialog.show();
   }
@@ -156,19 +156,30 @@ const sendMessage = () => {
     // // get bot response
     getBotResponse(message, apiToken)
       .then((response) => {
-        console.log("ext got rresponse", response);
-        const botMessageElement = document.createElement("div");
-        botMessageElement.innerText = response.message;
-        botMessageElement.style.marginBottom = "10px";
-        botMessageElement.style.padding = "10px";
-        botMessageElement.style.backgroundColor = "#c7e1ff";
-        botMessageElement.style.borderRadius = "4px";
+        console.log("got response", response);
+        const botResponse = response.responses.bot;
+        console.log("ext got rresponse", botResponse);
+        const cleanedResponse = botResponse.replace(/^\s*```json\s*/, '').replace(/\s*```\s*$/, '');
 
-        chatMessages.appendChild(botMessageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+        if (isValidWorkflow(JSON.parse(cleanedResponse))) {
+          console.log("Valid workflow that could be loaded");
+          const botMessageElement = document.createElement("div");
+          botMessageElement.innerText = botResponse;
 
-        runWorkflowLoader();
-        // addNodesAndEdges(app.graph, response.message);
+          botMessageElement.style.marginBottom = "10px";
+          botMessageElement.style.padding = "10px";
+          botMessageElement.style.backgroundColor = "#c7e1ff";
+          botMessageElement.style.borderRadius = "4px";
+
+          chatMessages.appendChild(botMessageElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+
+          // runWorkflowLoader();
+          loadGraphFromPrompt(JSON.parse(cleanedResponse));
+          // addNodesAndEdges(app.graph, response.message);
+        } else {
+          console.log("Not a valid workflow that could be loaded");
+        }
       })
       .catch((error) => {
         console.error(error);
