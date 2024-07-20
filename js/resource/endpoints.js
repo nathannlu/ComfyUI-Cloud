@@ -17,14 +17,14 @@ const workflowRun = {
   retrieveOutput: {
     method: "GET",
     path: "/workflow/{workflow_id}/runs/{run_id}/outputs",
-  }
-}
+  },
+};
 
 const workflow = {
   // upload local
   init: {
     method: "POST",
-    path: "/workflow/init"
+    path: "/workflow/init",
   },
   create: {
     method: "POST",
@@ -40,71 +40,75 @@ const workflow = {
   },
   error: {
     method: "POST",
-    path: "/workflow/error"
-  }
-}
+    path: "/workflow/error",
+  },
+};
 
 const billing = {
   retrieveCustomerSession: {
     method: "GET",
-    path: "/stripe/get-customer-session"
+    path: "/stripe/get-customer-session",
   },
   retrieveUsage: {
     method: "GET",
-    path: "/stripe/usage"
+    path: "/stripe/usage",
   },
   retrieveCredits: {
     method: "GET",
-    path: "/stripe/credits"
+    path: "/stripe/credits",
   },
-}
+};
 
 const auth = {
   register: {
     method: "POST",
-    path: "/auth/register"
+    path: "/auth/register",
   },
   login: {
     method: "POST",
-    path: "/auth/login"
-  }
-}
+    path: "/auth/login",
+  },
+};
 
 const support = {
   feedback: {
     method: "POST",
-    path: "/support/feedback"
+    path: "/support/feedback",
   },
   support: {
     method: "POST",
-    path: "/support/support"
+    path: "/support/support",
   },
   docs: {
     method: "POST",
-    path: "/support/docs"
+    path: "/support/docs",
   },
   tooltipHover: {
     method: "POST",
-    path: "/support/tooltipHover"
+    path: "/support/tooltipHover",
   },
   tooltipDocs: {
     method: "POST",
-    path: "/support/tooltipDocs"
+    path: "/support/tooltipDocs",
   },
   assistant: {
     method: "POST",
-    path: "/support/assistant"
-  }
-}
+    path: "/support/assistant",
+  },
+};
 
+const chatbot = {
+  sendMessage: {
+    method: "POST",
+    path: "/chat/send-message",
+  },
+};
 
 export const apiEndpoints = {
   workflowRun,
   workflow,
   billing,
   auth,
-  support
-}
-
-
-
+  support,
+  chatbot
+};
