@@ -27,7 +27,7 @@ const toggleChatBox = async () => {
   }
 };
 
-const sendMessage = () => {
+const sendMessage = async () => {
   if (!doesApiTokenExist) {
     toggleChatBox();
     setButtonDefault();
@@ -50,34 +50,34 @@ const sendMessage = () => {
     chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
     chatInput.value = "";
 
-    // get bot response
-    getBotResponse(message, apiToken)
-      .then((response) => {
-        const parsedBotResponse = parseWorkflowFromBot(response);
-        console.log("got response", parsedBotResponse);
-        if (isValidWorkflow(parsedBotResponse)) {
-          console.log("Valid workflow that could be loaded");
+    try {
+      const response = await getBotResponse(message);
+      const parsedBotResponse = parseWorkflowFromBot(response);
+      console.log("got response", parsedBotResponse);
 
-          const botMessageElement = document.createElement("div");
-          botMessageElement.innerText = JSON.stringify(parsedBotResponse);
-          botMessageElement.style.marginBottom = "10px";
-          botMessageElement.style.padding = "10px";
-          botMessageElement.style.backgroundColor = "#c7e1ff";
-          botMessageElement.style.borderRadius = "4px";
+      if (isValidWorkflow(parsedBotResponse)) {
+        console.log("Valid workflow that could be loaded");
 
-          chatMessages.appendChild(botMessageElement);
-          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+        const botMessageElement = document.createElement("div");
+        botMessageElement.innerText = JSON.stringify(parsedBotResponse);
+        botMessageElement.style.marginBottom = "10px";
+        botMessageElement.style.padding = "10px";
+        botMessageElement.style.backgroundColor = "#c7e1ff";
+        botMessageElement.style.borderRadius = "4px";
 
-          loadGraphFromPrompt(parsedBotResponse);
-        } else {
-          console.log("Not a valid workflow that could be loaded");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+        chatMessages.appendChild(botMessageElement);
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+
+        loadGraphFromPrompt(parsedBotResponse);
+      } else {
+        console.log("Not a valid workflow that could be loaded");
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }
 };
+
 
 const createChatButton = () => {
   const chatButton = document.createElement("div");
