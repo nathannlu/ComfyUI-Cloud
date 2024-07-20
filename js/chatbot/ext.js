@@ -215,16 +215,13 @@ const sendMessage = async () => {
 
     try {
       const response = await getBotResponse(message);
-      console.log("got response", response);
       let botMessage = "";
 
       const parsedBotResponse = parseWorkflowFromBot(response);
 
       if (isValidWorkflow(parsedBotResponse)) {
-        console.log("Valid workflow that could be loaded");
         botMessage = JSON.stringify(parsedBotResponse);
       } else {
-        console.log("Not a valid workflow that could be loaded");
         botMessage = response.responses.bot;
       }
 

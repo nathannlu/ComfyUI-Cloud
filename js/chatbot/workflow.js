@@ -20,8 +20,6 @@ function transformInputToGraph(input) {
     version: 0.4,
   };
 
-  console.log("baseGraph");
-  console.log(baseGraph);
 
   const xStep = 300; // step for node positions
   const yStep = 300; // step for node positions
@@ -60,9 +58,6 @@ function transformInputToGraph(input) {
     columnCounter++;
   });
 
-  console.log("baseGraph after nodes insertion");
-  console.log(baseGraph);
-
   // Insert edges
   input.edges.forEach((edgeData, index) => {
     const fromNode = nodesById[edgeData.from];
@@ -82,9 +77,6 @@ function transformInputToGraph(input) {
       });
     }
 
-    console.log("toNode");
-    console.log(toNode);
-
     // add outputs
     fromNode.outputs.push({
       name: getInputType(edgeData.to_input),
@@ -98,9 +90,6 @@ function transformInputToGraph(input) {
     outputIndex = fromNode.outputs.length - 1;
     inputIndex = fromNode.inputs.length - 1;
 
-    console.log("fromNode");
-    console.log(fromNode);
-
     // add links
     const link = [
       index + 1, // Link id
@@ -112,23 +101,16 @@ function transformInputToGraph(input) {
       getInputType(edgeData.to_input),
     ];
 
-    console.log("link");
-    console.log(link);
-
     fromNode.outputs[outputIndex].links.push(link[0]);
     baseGraph.links.push(link);
   });
 
-  console.log("baseGraph after edges insertion");
-  console.log(baseGraph);
 
   return baseGraph;
 }
 
 export function loadGraphFromPrompt(generatedWorkflow) {
   const translatedData = transformInputToGraph(generatedWorkflow);
-  // console.log("Translated Graph Data: ");
-  // console.log(translatedData);
   app.loadGraphData(translatedData, true);
   app.graph.change();
 }
