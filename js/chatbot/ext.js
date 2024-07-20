@@ -11,6 +11,9 @@ const CHAT_BOX_ID = "chat-box";
 const CHAT_INPUT_ID = "chat-input";
 const CHAT_MESSAGES_ID = "chat-messages";
 
+const apiToken = getApiToken();
+const doesApiTokenExist = !!apiToken;
+
 const createChatButton = () => {
   const chatButton = document.createElement("div");
   chatButton.id = CHAT_BUTTON_ID;
@@ -129,8 +132,6 @@ const createChatBox = () => {
   return chatBox;
 };
 const sendMessage = () => {
-  const apiToken = getApiToken();
-  const doesApiTokenExist = !!apiToken;
   if (!doesApiTokenExist) {
     toggleChatBox()
     setButtonDefault();
@@ -153,7 +154,7 @@ const sendMessage = () => {
     chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
     chatInput.value = "";
     // // get bot response
-    getBotResponse(message)
+    getBotResponse(message, apiToken)
       .then((response) => {
         console.log("ext got rresponse", response);
         const botMessageElement = document.createElement("div");

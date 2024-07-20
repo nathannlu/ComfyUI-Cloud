@@ -2,14 +2,14 @@
 
 const endpoint = 'http://localhost:4000/'; // Switch to live  as needed
 
-export async function getBotResponse(message) {
-    // TODO: add auth 
+export async function getBotResponse(message, token) {
     console.log("calling the gpt bot woith message", message);
     try {
         const response = await fetch(`${endpoint}chat/send-message`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
             },
             body: JSON.stringify({ message: message, origin: "ComfyUI Chat" })
         });
