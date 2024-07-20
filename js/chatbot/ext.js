@@ -52,32 +52,36 @@ const sendMessage = async () => {
 
     try {
       const response = await getBotResponse(message);
+      console.log("got response", response);
+      let botMessage = ""
+      
       const parsedBotResponse = parseWorkflowFromBot(response);
-      console.log("got response", parsedBotResponse);
+      
 
       if (isValidWorkflow(parsedBotResponse)) {
         console.log("Valid workflow that could be loaded");
-
-        const botMessageElement = document.createElement("div");
-        botMessageElement.innerText = JSON.stringify(parsedBotResponse);
-        botMessageElement.style.marginBottom = "10px";
-        botMessageElement.style.padding = "10px";
-        botMessageElement.style.backgroundColor = "#c7e1ff";
-        botMessageElement.style.borderRadius = "4px";
-
-        chatMessages.appendChild(botMessageElement);
-        chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-
-        loadGraphFromPrompt(parsedBotResponse);
+        botMessage = JSON.stringify(parsedBotResponse)
       } else {
         console.log("Not a valid workflow that could be loaded");
+        botMessage = response.responses.bot
       }
+
+      const botMessageElement = document.createElement("div");
+      botMessageElement.innerText = botMessage;
+      botMessageElement.style.marginBottom = "10px";
+      botMessageElement.style.padding = "10px";
+      botMessageElement.style.backgroundColor = "#c7e1ff";
+      botMessageElement.style.borderRadius = "4px";
+
+      chatMessages.appendChild(botMessageElement);
+      chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+
+      loadGraphFromPrompt(parsedBotResponse);
     } catch (error) {
       console.error(error);
     }
   }
 };
-
 
 const createChatButton = () => {
   const chatButton = document.createElement("div");
