@@ -1,6 +1,10 @@
 // import { api, app } from './comfy/comfy.js'
 import { app } from "../comfy/comfy.js";
-import { getBotResponse, isValidWorkflow } from "./chatbot.js";
+import {
+  getBotResponse,
+  isValidWorkflow,
+  parseWorkflowFromBot,
+} from "./chatbot.js";
 import { runWorkflowLoader, loadGraphFromPrompt } from "./workflow.js";
 import { setButtonDefault } from "../button/ui.js";
 import { authDialog } from "../auth/index.js";
@@ -13,6 +17,67 @@ const CHAT_MESSAGES_ID = "chat-messages";
 
 const apiToken = getApiToken();
 const doesApiTokenExist = !!apiToken;
+
+const toggleChatBox = async () => {
+  const chatBox = document.getElementById(CHAT_BOX_ID);
+  if (chatBox.style.display === "none") {
+    chatBox.style.display = "block";
+  } else {
+    chatBox.style.display = "none";
+  }
+};
+
+const sendMessage = () => {
+  if (!doesApiTokenExist) {
+    toggleChatBox();
+    setButtonDefault();
+    return authDialog.show();
+  }
+
+  const chatInput = document.getElementById(CHAT_INPUT_ID);
+  const chatMessages = document.getElementById(CHAT_MESSAGES_ID);
+  const message = chatInput.value.trim();
+
+  if (message) {
+    const messageElement = document.createElement("div");
+    messageElement.innerText = message;
+    messageElement.style.marginBottom = "10px";
+    messageElement.style.padding = "10px";
+    messageElement.style.backgroundColor = "#e1ffc7";
+    messageElement.style.borderRadius = "4px";
+
+    chatMessages.appendChild(messageElement);
+    chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+    chatInput.value = "";
+
+    // get bot response
+    getBotResponse(message, apiToken)
+      .then((response) => {
+        const parsedBotResponse = parseWorkflowFromBot(response);
+        console.log("got response", parsedBotResponse);
+        if (isValidWorkflow(parsedBotResponse)) {
+          console.log("Valid workflow that could be loaded");
+
+          const botMessageElement = document.createElement("div");
+          botMessageElement.innerText = JSON.stringify(parsedBotResponse);
+          botMessageElement.style.marginBottom = "10px";
+          botMessageElement.style.padding = "10px";
+          botMessageElement.style.backgroundColor = "#c7e1ff";
+          botMessageElement.style.borderRadius = "4px";
+
+          chatMessages.appendChild(botMessageElement);
+          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+
+          loadGraphFromPrompt(parsedBotResponse);
+        } else {
+          console.log("Not a valid workflow that could be loaded");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }
+};
 
 const createChatButton = () => {
   const chatButton = document.createElement("div");
@@ -130,70 +195,6 @@ const createChatBox = () => {
   chatBox.appendChild(otherButton);
 
   return chatBox;
-};
-const sendMessage = () => {
-  if (!doesApiTokenExist) {
-    toggleChatBox();
-    setButtonDefault();
-    return authDialog.show();
-  }
-
-  const chatInput = document.getElementById(CHAT_INPUT_ID);
-  const chatMessages = document.getElementById(CHAT_MESSAGES_ID);
-  const message = chatInput.value.trim();
-
-  if (message) {
-    const messageElement = document.createElement("div");
-    messageElement.innerText = message;
-    messageElement.style.marginBottom = "10px";
-    messageElement.style.padding = "10px";
-    messageElement.style.backgroundColor = "#e1ffc7";
-    messageElement.style.borderRadius = "4px";
-
-    chatMessages.appendChild(messageElement);
-    chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-    chatInput.value = "";
-    // // get bot response
-    getBotResponse(message, apiToken)
-      .then((response) => {
-        console.log("got response", response);
-        const botResponse = response.responses.bot;
-        console.log("ext got rresponse", botResponse);
-        const cleanedResponse = botResponse.replace(/^\s*```json\s*/, '').replace(/\s*```\s*$/, '');
-
-        if (isValidWorkflow(JSON.parse(cleanedResponse))) {
-          console.log("Valid workflow that could be loaded");
-          const botMessageElement = document.createElement("div");
-          botMessageElement.innerText = botResponse;
-
-          botMessageElement.style.marginBottom = "10px";
-          botMessageElement.style.padding = "10px";
-          botMessageElement.style.backgroundColor = "#c7e1ff";
-          botMessageElement.style.borderRadius = "4px";
-
-          chatMessages.appendChild(botMessageElement);
-          chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
-
-          // runWorkflowLoader();
-          loadGraphFromPrompt(JSON.parse(cleanedResponse));
-          // addNodesAndEdges(app.graph, response.message);
-        } else {
-          console.log("Not a valid workflow that could be loaded");
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-  }
-};
-
-const toggleChatBox = async () => {
-  const chatBox = document.getElementById(CHAT_BOX_ID);
-  if (chatBox.style.display === "none") {
-    chatBox.style.display = "block";
-  } else {
-    chatBox.style.display = "none";
-  }
 };
 
 const registerChat = () => {
