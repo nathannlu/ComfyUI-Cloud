@@ -26,6 +26,8 @@ from .utils.task import task_create, task_set_status, task_set_progress, task_ge
 from .utils.requirements import update_requirements
 from .utils.custom_nodes import get_custom_node_list_silent
 
+from nodes import NODE_CLASS_MAPPINGS
+
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
 async def validate_input_path(request):
@@ -102,6 +104,22 @@ async def comfy_cloud_run(request):
 async def get_custom_nodes_list(request):
     custom_nodes = get_custom_node_list_silent()
     return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
+
+
+@server.PromptServer.instance.routes.get("/comfy-cloud/nodes-inputs-outputs")
+async def get_nodes_inputs_outputs(request):
+    node_inputs_outputs = {}
+
+    for key in NODE_CLASS_MAPPINGS:
+        data = NODE_CLASS_MAPPINGS[key]()
+        input_types = data.INPUT_TYPES()
+        output_types = data.RETURN_TYPES
+
+        node_inputs_outputs[key] = {
+            "input_types": input_types["required"],
+            "output_types": output_types
+        }
+    return web.json_response({'nodes': node_inputs_outputs}, content_type='application/json')
 
             
 async def upload_task_execution(task_id, file_specs, workflow_id):

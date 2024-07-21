@@ -157,6 +157,14 @@ export const getCustomNodesList = async () => {
   return custom_nodes_list.custom_nodes
 }
 
+export const getNodesInputsOutputs = async () => {
+  const nodes = await fetch("/comfy-cloud/nodes-inputs-outputs", {
+    method: "get",
+  }).then((x) => x.json())
+
+  return nodes.nodes
+}
+
 
 // Exec
 // returns new changes
