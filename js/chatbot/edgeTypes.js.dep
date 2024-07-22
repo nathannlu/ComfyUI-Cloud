@@ -383,8 +383,6 @@ function scanNodeInputOutput() {
     }
   }
 
-
-  console.log(LiteGraph.registered_node_types);
   if (LiteGraph.registered_node_types) {
     // Get the first node in the list
     for (const [key, nodeType] of Object.entries(

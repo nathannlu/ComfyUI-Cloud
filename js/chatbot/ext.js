@@ -1,14 +1,11 @@
 // import { api, app } from './comfy/comfy.js'
 import { app } from "../comfy/comfy.js";
-import {
-  getBotResponse,
-  isValidWorkflow,
-  parseWorkflowFromBot,
-} from "./chatbot.js";
-import { loadGraphFromPrompt } from "./workflow.js";
+import { loadGraphFromPrompt, isValidWorkflow } from "./workflow.js";
 import { setButtonDefault } from "../button/ui.js";
 import { authDialog } from "../auth/index.js";
 import { getApiToken } from "../utils.js";
+
+import { local } from '../resource/index.js';
 
 const CHAT_BUTTON_ID = "chat-button";
 const CHAT_BOX_ID = "chat-box";
@@ -214,16 +211,13 @@ const sendMessage = async () => {
     chatInput.value = "";
 
     try {
-      const response = await getBotResponse(message);
       let botMessage = "";
 
-      const parsedBotResponse = parseWorkflowFromBot(response);
+      // fetch response to localhost
+      const { nodes: parsedBotResponse } = await local.sendMessage({ message });
 
-      if (isValidWorkflow(parsedBotResponse)) {
-        botMessage = JSON.stringify(parsedBotResponse);
-      } else {
-        botMessage = response.responses.bot;
-      }
+      console.log(parsedBotResponse);
+      botMessage = JSON.stringify(parsedBotResponse);
 
       const botMessageElement = document.createElement("div");
       botMessageElement.innerText = botMessage;
@@ -251,7 +245,7 @@ const sendMessage = async () => {
   }
 };
 
-const registerChat = () => {
+export const registerChat = () => {
   // With js, append an bottom that opens up a chatbox in the bottom right hand corner
   const chatButton = createChatButton();
   const chatBox = createChatBox();
@@ -261,15 +255,3 @@ const registerChat = () => {
   chatButton.addEventListener("click", toggleChatBox);
 };
 
-/** @typedef {import('../../../web/types/comfy.js').ComfyExtension} ComfyExtension*/
-/** @type {ComfyExtension} */
-const ext = {
-  name: "nathannlu.ComfyUI-Chat",
-
-  // ComfyUI extension init
-  init() {
-    registerChat();
-  },
-};
-
-app.registerExtension(ext);
