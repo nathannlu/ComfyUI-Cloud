@@ -2,6 +2,10 @@ import { app } from "./comfy.js";
 import { addInterface } from "../button/index.js";
 import { endpoint } from "../constants.js";
 import { ComfyCloud } from "../node/index.js";
+import { registerChat } from "../chatbot/ext.js";
+import { 
+  getNodesInputsOutputs
+} from '../utils.js'
 
 export const ext = {
   name: "nathannlu.ComfyCloud",
@@ -9,6 +13,7 @@ export const ext = {
   init() {
     addInterface();
     addPing();
+    registerChat();
   },
 
   // Add in node that keeps track of workflow_name

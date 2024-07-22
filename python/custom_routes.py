@@ -26,7 +26,8 @@ from .utils.task import task_create, task_set_status, task_set_progress, task_ge
 from .utils.requirements import update_requirements
 from .utils.custom_nodes import get_custom_node_list_silent
 
-from nodes import NODE_CLASS_MAPPINGS
+from .chat.graph import transform_input_to_graph
+from .chat.format import preprocess_bot_response, postprocess
 
 
 @server.PromptServer.instance.routes.post("/comfy-cloud/validate-input-path")
@@ -105,23 +106,48 @@ async def get_custom_nodes_list(request):
     custom_nodes = get_custom_node_list_silent()
     return web.json_response({'custom_nodes': custom_nodes}, content_type='application/json')
 
+@server.PromptServer.instance.routes.post("/comfy-cloud/send-message")
+async def chat(request):
+    try:
+        json_data = await request.json()
+        auth_header = request.headers.get('Authorization')
 
-@server.PromptServer.instance.routes.get("/comfy-cloud/nodes-inputs-outputs")
-async def get_nodes_inputs_outputs(request):
-    node_inputs_outputs = {}
-
-    for key in NODE_CLASS_MAPPINGS:
-        data = NODE_CLASS_MAPPINGS[key]()
-        input_types = data.INPUT_TYPES()
-        output_types = data.RETURN_TYPES
-
-        node_inputs_outputs[key] = {
-            "input_types": input_types["required"],
-            "output_types": output_types
+        message = json_data["message"]
+        origin = "Comfy Cloud"
+        url = "https://comfyui-cloud-a0cf78bd8c3d.herokuapp.com/chat/send-message"
+        payload = {
+            "message": message,
+            "origin": origin
         }
-    return web.json_response({'nodes': node_inputs_outputs}, content_type='application/json')
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": auth_header
+        }
 
-            
+        response_data = None
+        response = requests.post(url, json=payload, headers=headers)
+        if response.status_code == 200:
+            response_data = response.json()
+        else:
+            raise Exception("Failed to send message to API")
+
+        bot_response = response_data["responses"]["bot"]
+
+        # Parse response 
+        bot_response = preprocess_bot_response(bot_response)
+
+        # Construct comfyui node
+        graph = transform_input_to_graph(bot_response)
+        data = postprocess(graph)
+        response = requests.post(url, json=payload, headers=headers)
+
+        return web.json_response({'nodes': data}, content_type='application/json')
+
+    except Exception as e:
+        print("Error:", e)
+        return web.json_response({ "error": e }, status=400)
+
+
 async def upload_task_execution(task_id, file_specs, workflow_id):
     try:
         task_set_status(task_id, TaskStatus.HASHING)
