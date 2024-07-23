@@ -19,7 +19,10 @@ def _get_widget_values(node):
     class_type = node['class_type']
     registered_node = NODE_CLASS_MAPPINGS[class_type]()
 
-    node_widget_values = node['widget_values']
+    node_widget_values = []
+    if 'widget_values' in node:
+        node_widget_values = node['widget_values']
+
     registered_node_inputs_dict = registered_node.INPUT_TYPES()["required"] # dictionary
     final_widget_values = {}
 
