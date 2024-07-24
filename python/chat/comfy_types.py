@@ -8,10 +8,11 @@ def get_inputs_outputs():
         input_types = data.INPUT_TYPES()
         output_types = data.RETURN_TYPES
 
-        node_inputs_outputs[key] = {
-            "input_types": input_types["required"],
-            "output_types": output_types
-        }
+        if "required" in input_types:
+            node_inputs_outputs[key] = {
+                "input_types": input_types["required"],
+                "output_types": output_types
+            }
 
     return node_inputs_outputs
 
