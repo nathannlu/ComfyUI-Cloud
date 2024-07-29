@@ -10,7 +10,7 @@ from .blob import blob_upload
 from .hash import get_upload_hashes
 from .net import make_post_request
 
-base_url = "https://api.comfyui-cloud.com/storage"
+base_url = "https://storage.comfyui-cloud.com"
 
 async def upload_file_specs(
     file_specs: List[FileUploadSpec],
