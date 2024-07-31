@@ -14,6 +14,10 @@ export const ext = {
     addInterface();
     addPing();
     registerChat();
+
+    if(app?.ui?.settings) {
+      app.ui.settings.setSettingValue("Comfy.UseNewMenu", "Disabled");
+    }
   },
 
   // Add in node that keeps track of workflow_name
